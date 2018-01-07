@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>img {width: 100px;}</style>
+</head>
+
+<body>
+	<a href="/logout">Log Out</a>
+    <h1>Hello, {{ username }}</h1>
+    {% if filenames %}
+    {% for filename in filenames %}
+	<img src="{{ url_for('static', filename=filename) }}">
+	{% endfor %}
+    <form action="/test_upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Upload Image">
+    </form>
+    {% else %}
+    <a href="/create_card">Create New Dingo Card</a>
+    {% endif %}
+
+    {% if display_probs %}
+    {% for prob in probs %}
+    <p>{{ prob[0] }} : {{ prob[1] }}</p>
+    {% endfor %}
+    {% endif %}
+
+</body>
+
+</html>
