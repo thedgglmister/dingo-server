@@ -175,7 +175,7 @@ def game(username, game_name):
 
 	conn = db_connect()
 	c = conn.cursor()
-	c.execute("""SELECT slot, filename from cards JOIN dogs ON cards.breed = dogs.breed WHERE username = %s AND game_name = %s""", (username, game_name))
+	c.execute("""SELECT slot, breed, filename from cards JOIN dogs ON cards.breed = dogs.breed WHERE username = %s AND game_name = %s""", (username, game_name))
 
 	card = c.fetchall().sort()
 
@@ -230,8 +230,8 @@ def create_game():
 
 
 
-@app.route("/create_card")
-def create_card(): ##add to database and session. On login, make sure to add all info to session as well. Think about what if already has info, etc...
+@app.route("/create_card") ###re-do!!!
+def create_card():
 	if session.get("username"):
 		breeds = [BREEDS[random.randint(0, 3)] for _ in range(4)]
 		conn = db_connect()
@@ -258,12 +258,12 @@ def vidtest():
 	return render_template("vidtest.html")
 
 
-@app.route("/test_upload", methods=["POST"])
+@app.route("/test_upload", methods=["POST"]) ###use ajax...
 def test_upload(): ## give infer image without saving?
 	if request.method == "POST":
 		raw_file = request.files["file"].read()
 		probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
-		return render_template("game.html", username = session.get("username"), filenames = session.get("filenames"), display_probs = True, probs = probs.take(range(5)).values)
+		return render_template("card.html", username = session.get("username"), filenames = session.get("filenames"), display_probs = True, probs = probs.take(range(5)).values)
 
 
 
