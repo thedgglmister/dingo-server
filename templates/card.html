@@ -8,10 +8,12 @@
 
 <body>
 	<a href="/logout">Log Out</a>
-    <h1>Hello, {{ username }}</h1>
-    {% if filenames %}
-    {% for filename in filenames %}
-	<img src="{{ url_for('static', filename=filename) }}">
+    <a href="{{ url_for('user', username=username) }}">Back</a>
+
+    <h1>{{ game_name }}</h1>
+    {% if card %}
+    {% for slot in card %}
+	<img src="{{ url_for('static', filename=slot[1]) }}">
 	{% endfor %}
     <form action="/test_upload" method="post" enctype="multipart/form-data">
         <input type="file" name="file">
@@ -20,13 +22,13 @@
     {% else %}
     <a href="/create_card">Create New Dingo Card</a>
     {% endif %}
-
+<!--
     {% if display_probs %}
     {% for prob in probs %}
     <p>{{ prob[0] }} : {{ prob[1] }}</p>
     {% endfor %}
     {% endif %}
-
+-->
 </body>
 
 </html>

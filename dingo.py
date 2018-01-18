@@ -129,7 +129,7 @@ def login():
 ######################
 
 
-@app.route("/signup", methods=["GET", "POST"]) 
+@app.route("/signup", methods=["GET", "POST"])
 def signup():
 	if request.method == "POST":
 		username = request.form['username']
@@ -165,21 +165,33 @@ def user(username):
 		         WHERE username = %s 
 		         ORDER BY join_date""", (username,))
 	session["game_names"] = [match[0] for match in c.fetchall()]
-	return render_template("user.html", username = username, game_names = session.get("game_names"))
+	return render_template("games.html", username = username, game_names = session.get("game_names"))
 
 
 @app.route("/user/<username>/<game_name>")
 def game(username, game_name):
-	return game_name
+	if username != session.get("username"):
+		return redirect(url_for('login'))
+
+	conn = db_connect()
+	c = conn.cursor()
+	c.execute("""SELECT slot, filename from cards JOIN dogs ON cards.breed = dogs.breed WHERE username = %s AND game_name = %s""", (username, game_name))
+
+	card = c.fetchall().sort()
+
+	render_template("card.html", card=card, username=username, game_name=game_name)
+
+
+
 
 
 
 @app.route("/create_game", methods=["GET", "POST"])
-def create_game(): ##add to database and session. On login, make sure to add all info to session as well. Think about what if already has info, etc...
+def create_game():
 	if request.method == "POST":
 		game_name = request.form["game_name"]
 		if not game_name:
-			return render_template("create_game.html", username = session.get("username"), game_name_error_msg = "Game name cannot be empty")
+			return render_template("create_game.html", username=session.get("username"), game_name_error_msg = "Game name cannot be empty")
 		invitees = {user.strip() for user in request.form["invitees"].split(",") if user}
 		conn = db_connect()
 		c = conn.cursor()
@@ -251,7 +263,7 @@ def test_upload(): ## give infer image without saving?
 	if request.method == "POST":
 		raw_file = request.files["file"].read()
 		probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
-		return render_template("user.html", username = session.get("username"), filenames = session.get("filenames"), display_probs = True, probs = probs.take(range(5)).values)
+		return render_template("game.html", username = session.get("username"), filenames = session.get("filenames"), display_probs = True, probs = probs.take(range(5)).values)
 
 
 
