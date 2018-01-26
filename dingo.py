@@ -175,7 +175,7 @@ def game(username, game_name):
 
 	conn = db_connect()
 	c = conn.cursor()
-	c.execute("""SELECT slot, cards.breed, filename from cards JOIN dogs ON cards.breed = dogs.breed WHERE username = %s AND game_name = %s""", (username, game_name))
+	c.execute("""SELECT slot, cards.breed, filename FROM cards JOIN dogs ON cards.breed = dogs.breed FROM cards JOIN games ON cards.game_id = games.id WHERE username = %s AND game_name = %s""", (username, game_name))
 
 	card = c.fetchall().sort()
 
@@ -217,8 +217,6 @@ def create_game():
 		return redirect(url_for("login"))
 	else:
 		return render_template("create_game.html", username = session.get("username"))
-
-
 
 
 
