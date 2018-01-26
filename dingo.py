@@ -175,7 +175,7 @@ def game(username, game_name):
 
 	conn = db_connect()
 	c = conn.cursor()
-	c.execute("""SELECT slot, breed, filename from cards JOIN dogs ON cards.breed = dogs.breed WHERE username = %s AND game_name = %s""", (username, game_name))
+	c.execute("""SELECT slot, cards.breed, filename from cards JOIN dogs ON cards.breed = dogs.breed WHERE username = %s AND game_name = %s""", (username, game_name))
 
 	card = c.fetchall().sort()
 
