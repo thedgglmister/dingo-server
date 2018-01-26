@@ -179,7 +179,7 @@ def game(username, game_name):
 
 	card = c.fetchall().sort()
 
-	render_template("card.html", card=card, username=username, game_name=game_name)
+	return render_template("card.html", card=card, username=username, game_name=game_name)
 
 
 
