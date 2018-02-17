@@ -191,7 +191,7 @@ def create_game():
 	if request.method == "POST":
 		game_name = request.form["game_name"]
 		if not game_name:
-			return render_template("create_game.html", username=session.get("username"), game_name_error_msg = "Game name cannot be empty")
+			return render_template("create_game.html", username=session.get("username"), game_name_error_msg="Game name cannot be empty")
 		invitees = {user.strip() for user in request.form["invitees"].split(",") if user}
 		conn = db_connect()
 		c = conn.cursor()
@@ -205,18 +205,18 @@ def create_game():
 		invite_error_msg = None if not invalid_invitees else "Usernames '" + "', '".join(invalid_invitees) + "' do not exist"
 		if game_name_error_msg or invite_error_msg:
 			conn.close()
-			return render_template("create_game.html", username = session.get("username"), game_name_error_msg = game_name_error_msg, invite_error_msg = invite_error_msg)
+			return render_template("create_game.html", username=session.get("username"), game_name_error_msg=game_name_error_msg, invite_error_msg=invite_error_msg)
 		else:
 			invitees.add(session["username"])
 			for invitee in invitees:
 				c.execute("""INSERT INTO games (game_name, username, join_date) VALUES (%s, %s, CURRENT_TIMESTAMP);""", (game_name, invitee))
 			conn.commit()
 			conn.close()
-			return redirect(url_for("user", username = session["username"]))
+			return redirect(url_for("user", username=session["username"]))
 	elif not session.get("username"):
 		return redirect(url_for("login"))
 	else:
-		return render_template("create_game.html", username = session.get("username"))
+		return render_template("create_game.html", username=session.get("username"))
 
 
 
@@ -243,11 +243,11 @@ def create_card(game_name):
 		breed_cnt = len(all_breeds)
 
 		for i in range(CARD_SIZE):
-			breed_choice = all_breeds[random.randint(0, breed_cnt)]
+			breed_choice = all_breeds[random.randint(0, breed_cnt - 1)]
 			c.execute("INSERT INTO cards VALUES (%s, %s, %s)", (username, i, breed_choice))
 		c.commit()
 		conn.close()
-	return redirect(url_for("game"), username = username, game_name = game_name)
+	return redirect(url_for("game"), username=username, game_name=game_name)
 
 
 
