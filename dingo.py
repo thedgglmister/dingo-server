@@ -245,7 +245,7 @@ def create_card(game_name):
 		for i in range(CARD_SIZE):
 			breed_choice = all_breeds[random.randint(0, breed_cnt - 1)]
 			c.execute("INSERT INTO cards VALUES (%s, %s, %s)", (username, i, breed_choice))
-		c.commit()
+		conn.commit()
 		conn.close()
 	return redirect(url_for("game"), username=username, game_name=game_name)
 
