@@ -22,7 +22,7 @@
         <input type="submit" value="Upload Image">
     </form>
     {% else %}
-    <a href="/create_card">Create New Dingo Card</a>
+    <a href="/create_card/{{game_name}}">Create New Dingo Card</a>
     {% endif %}
 
     <input id="hidden_input" type="file" accept="image/*" capture="camera" />

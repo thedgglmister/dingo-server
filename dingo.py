@@ -19,7 +19,7 @@ app.secret_key = urandom(24)
 
 
 BREEDS = ["Golden Retriever", "English Setter", "Beagle", "Weimaraner"]
-
+CARD_SIZE = 4
 
 
 
@@ -228,27 +228,30 @@ def create_game():
 
 
 
-@app.route("/create_card") ###re-do!!!
-def create_card():
-	if session.get("username"):
-		breeds = [BREEDS[random.randint(0, 3)] for _ in range(4)]
+@app.route("/create_card/<game_name>") # only post? yes. ###re-do!!! 
+def create_card(game_name):
+	username = session.get("username")
+	if username:
+		#delete old card
 		conn = db_connect()
 		c = conn.cursor()
-		c.execute("DELETE FROM cards WHERE username = %s", (session["username"],))
-		conn.commit()
-		for i, breed in enumerate(breeds):
-			c.execute("INSERT INTO cards VALUES (%s, %s, %s)", (session["username"], i, breed))
+		c.execute("DELETE FROM cards WHERE username = %s", (username,))
 		conn.commit()
 
-		c.execute("""SELECT filename from cards JOIN dogs 
-			         ON cards.breed = dogs.breed 
-			         WHERE username = %s 
-			         ORDER BY slot""", (session["username"],))
-		filenamess = [path.join("img", tup[0]) for tup in c.fetchall()]
+		c.execute("SELECT breed FROM dogs")
+		all_breeds = c.fetchall()
+		breed_cnt = len(all_breeds)
+
+		for i in range(CARD_SIZE):
+			breed_choice = all_breeds[random.randint(0, breed_cnt)]
+			c.execute("INSERT INTO cards VALUES (%s, %s, %s)", (username, i, breed_choice))
+		c.commit()
 		conn.close()
-		session["breeds"] = breeds
-		session["filenamess"] = filenamess
-	return redirect(url_for("index"))
+	return redirect(url_for("game"), username = username, game_name = game_name)
+
+
+
+
 
 
 @app.route("/vidtest")
