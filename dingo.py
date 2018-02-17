@@ -27,7 +27,7 @@ CARD_SIZE = 4
 
 #######
 def db_connect():
-	if __name__ == "__main__": #for testing
+	if len(argv) == 2: #for testing
 		conn = connect("dbname=dingo")
 	else:
 		parse.uses_netloc.append("postgres")
@@ -248,7 +248,8 @@ def create_card(game_name):
 		conn.commit()
 		conn.close()
 		return redirect(url_for("game", username=username, game_name=game_name))
-
+	else:
+		redirect(url_for("login"))
 
 
 
