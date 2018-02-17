@@ -27,7 +27,9 @@ CARD_SIZE = 4
 
 #######
 def db_connect():
-	if len(argv) == 1: ####only for testing do i need else
+	if __name__ == "__main__": #for testing
+		conn = connect("dbname=dingo")
+	else:
 		parse.uses_netloc.append("postgres")
 		url = parse.urlparse(environ["DATABASE_URL"])
 		conn = connect(
@@ -37,8 +39,6 @@ def db_connect():
 			host=url.hostname,
 			port=url.port
 		)
-	else:
-		conn = connect("dbname=dingo")
 	return conn
 
 
@@ -247,7 +247,7 @@ def create_card(game_name):
 			c.execute("INSERT INTO cards VALUES (%s, %s, %s)", (username, i, breed_choice))
 		conn.commit()
 		conn.close()
-	return redirect(url_for("game", username=username, game_name=game_name))
+		return redirect(url_for("game", username=username, game_name=game_name))
 
 
 
