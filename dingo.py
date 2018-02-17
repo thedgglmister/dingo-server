@@ -247,7 +247,7 @@ def create_card(game_name):
 			c.execute("INSERT INTO cards VALUES (%s, %s, %s)", (username, i, breed_choice))
 		conn.commit()
 		conn.close()
-	return redirect(url_for("game"), username=username, game_name=game_name)
+	return redirect(url_for("game", username=username, game_name=game_name))
 
 
 
