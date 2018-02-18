@@ -5,7 +5,6 @@ $(document).ready(function() {
     $(".slot").on("click", function() {
 
         breed = $(this).attr("data-breed");
-        alert(breed);
         $("#hidden_input").click();
 
     });

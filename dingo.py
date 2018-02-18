@@ -137,7 +137,7 @@ def signup():
 		pw = request.form["password"]
 		conn = db_connect()
 		c = conn.cursor()
-		c.execute("""INSERT INTO users VALUES (%s, %s, %s);""", (username, generate_password_hash(pw), email))
+		c.execute("""INSERT INTO users (username, password, email) VALUES (%s, %s, %s);""", (username, generate_password_hash(pw), email))
 		conn.commit()
 		conn.close()
 		session["username"] = username
@@ -264,7 +264,8 @@ def test_upload(): ## give infer image without saving?
 	if request.method == "POST":
 		raw_file = request.files["file"].read()
 		probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
-		return probs.take(range(5)).values
+		guess_breed, guess_prob = probs.take([0]).values.tolist()[0]
+		return (guess_breed + ": " + str(guess_prob))
 
 
 
