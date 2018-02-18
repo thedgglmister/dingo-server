@@ -4,7 +4,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script type="text/javascript" src="static/js/card.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/card.js') }}"></script>
     <style>img {width: 100px;} input {display: none}</style>
 </head>
 
@@ -14,19 +14,15 @@
 
     <h1>{{ game_name }}</h1>
     {% if card %}
-    <p>card is defined</p>
     {% for slot in card %}
-    <img class="slot" data-breed="{{ slot[1] }}" src="{{ url_for('static', filename=slot[2]) }}">
+    <img class="slot" data-breed="{{ slot[1] }}" src="{{ url_for('static', filename='img/' + slot[2]) }}">
     {% endfor %}
     <form action="/test_upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="Upload Image">
+        <input id="hidden_input" type="file" accept="image/*" capture="camera" />
     </form>
     {% else %}
     <a href="/create_card/{{game_name}}">Create New Dingo Card</a>
     {% endif %}
-
-    <input id="hidden_input" type="file" accept="image/*" capture="camera" />
 <!--
     {% if display_probs %}
     {% for prob in probs %}

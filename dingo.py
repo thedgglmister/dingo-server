@@ -175,10 +175,9 @@ def game(username, game_name):
 
 	conn = db_connect()
 	c = conn.cursor()
-	c.execute("""SELECT slot, cards.breed, filename FROM cards, dogs, games WHERE cards.breed = dogs.breed AND cards.game_id = games.game_id AND cards.username = %s AND game_name = %s""", (username, game_name))
-
-	card = c.fetchall().sort()
-
+	c.execute("""SELECT slot, cards.breed, filename FROM cards, dogs WHERE cards.breed = dogs.breed AND cards.username = %s AND cards.game_name = %s""", (username, game_name))
+	card = sorted(c.fetchall())
+	conn.close()
 	return render_template("card.html", card=card, username=username, game_name=game_name)
 
 
@@ -228,14 +227,14 @@ def create_game():
 
 
 
-@app.route("/create_card/<game_name>") # only post? yes. ###re-do!!! 
+@app.route("/create_card/<game_name>") # only post? yes. 
 def create_card(game_name):
 	username = session.get("username")
 	if username:
 		#delete old card
 		conn = db_connect()
 		c = conn.cursor()
-		c.execute("DELETE FROM cards WHERE username = %s", (username,))
+		c.execute("DELETE FROM cards WHERE username = %s and game_name = %s", (username, game_name))
 		conn.commit()
 
 		c.execute("SELECT breed FROM dogs")
@@ -244,7 +243,7 @@ def create_card(game_name):
 
 		for i in range(CARD_SIZE):
 			breed_choice = all_breeds[random.randint(0, breed_cnt - 1)]
-			c.execute("INSERT INTO cards VALUES (%s, %s, %s)", (username, i, breed_choice))
+			c.execute("INSERT INTO cards (username, game_name, slot, breed) VALUES (%s, %s, %s, %s)", (username, game_name, i, breed_choice))
 		conn.commit()
 		conn.close()
 		return redirect(url_for("game", username=username, game_name=game_name))
@@ -265,7 +264,7 @@ def test_upload(): ## give infer image without saving?
 	if request.method == "POST":
 		raw_file = request.files["file"].read()
 		probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
-		return render_template("card.html", username = session.get("username"), filenames = session.get("filenames"), display_probs = True, probs = probs.take(range(5)).values)
+		return probs.take(range(5)).values
 
 
 
