@@ -3,13 +3,16 @@ $(document).ready(function() {
     var breed;
 
     $(".slot").on("click", function() {
-
-        breed = $(this).attr("data-breed");
-        $("#hidden_input").click();
-
+    	if ($(this).attr("data-checked") == "False") {
+	        breed = $(this).attr("data-breed");
+	      	slot = $(this).attr("data-slot");
+	      	$("#slot_input").val(slot);
+	        $("#breed_input").val(breed);
+	        $("#file_input").click();
+	    }
     });
 
-    $("#hidden_input").on("change", function() {
+    $("#file_input").on("change", function() {
     	$("form").submit();
         //ajax post to server
         //show waiting message in meantime...

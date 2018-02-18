@@ -20,6 +20,7 @@ app.secret_key = urandom(24)
 
 BREEDS = ["Golden Retriever", "English Setter", "Beagle", "Weimaraner"]
 CARD_SIZE = 4
+PASSING_PROB = 0.8
 
 
 
@@ -175,7 +176,7 @@ def game(username, game_name):
 
 	conn = db_connect()
 	c = conn.cursor()
-	c.execute("""SELECT slot, cards.breed, filename FROM cards, dogs WHERE cards.breed = dogs.breed AND cards.username = %s AND cards.game_name = %s""", (username, game_name))
+	c.execute("""SELECT slot, cards.breed, filename, checked FROM cards, dogs WHERE cards.breed = dogs.breed AND cards.username = %s AND cards.game_name = %s""", (username, game_name))
 	card = sorted(c.fetchall())
 	conn.close()
 	return render_template("card.html", card=card, username=username, game_name=game_name)
@@ -262,10 +263,22 @@ def vidtest():
 @app.route("/test_upload", methods=["POST"]) ###use ajax...
 def test_upload(): ## give infer image without saving?
 	if request.method == "POST":
+		username = request.form['username']
+		game_name = request.form['game_name']
 		raw_file = request.files["file"].read()
 		probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
+		submit_breed = request.form['breed'].lower().replace(' ', '_')
 		guess_breed, guess_prob = probs.take([0]).values.tolist()[0]
-		return (guess_breed + ": " + str(guess_prob))
+		
+		if guess_breed == submit_breed and guess_prob > PASSING_PROB:
+			slot = request.form['slot']
+			conn = db_connect()
+			c = conn.cursor()
+			c.execute("UPDATE cards SET checked=TRUE WHERE username = %s AND game_name = %s AND slot = %s", (username, game_name, slot))
+			conn.commit()
+			conn.close()
+			#check if theres a bingo here, or on redirect to game?
+		return redirect(url_for("game", username=username, game_name=game_name))
 
 
 

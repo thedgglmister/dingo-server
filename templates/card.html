@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/card.js') }}"></script>
-    <style>img {width: 100px;} input {display: none}</style>
+    <style>img {width: 100px; display: block;} input {display: none}</style>
 </head>
 
 <body>
@@ -15,10 +15,17 @@
     <h1>{{ game_name }}</h1>
     {% if card %}
     {% for slot in card %}
-    <img class="slot" data-breed="{{ slot[1] }}" src="{{ url_for('static', filename='img/' + slot[2]) }}">
+    <img class="slot" data-breed="{{ slot[1] }}" data-slot="{{ slot[0] }}" data-checked="{{ slot[3] }}" src="{{ url_for('static', filename='img/' + slot[2]) }}">
+    {% if slot[3] == True %}
+    <span>&#10003;</span>
+    {% endif %}
     {% endfor %}
     <form action="{{ url_for('test_upload') }}" method="post" enctype="multipart/form-data">
-        <input id="hidden_input" type="file" name="file" accept="image/*" capture="camera" />
+        <input type="hidden" name="username" value="{{ username }}"/>
+        <input type="hidden" name="game_name" value="{{ game_name }}"/>
+        <input id="slot_input" type="hidden" name="slot" value=""/>
+        <input id="breed_input" type="hidden" name="breed" value=""/>
+        <input id = "file_input" type="file" name="file" accept="image/*" capture="camera" />
     </form>
     {% else %}
     <a href="/create_card/{{game_name}}">Create New Dingo Card</a>
