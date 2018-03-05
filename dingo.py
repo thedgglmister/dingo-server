@@ -20,7 +20,7 @@ app.secret_key = urandom(24)
 
 BREEDS = ["Golden Retriever", "English Setter", "Beagle", "Weimaraner"]
 CARD_SIZE = 4
-PASSING_PROB = 0.8
+PASSING_PROB = 0.8 ## calibrate after getting rid of a bunch, especially those that cause easy confusion. find 10 high quality pictures and uplaod them and see if theres confusion. then try medium quality low quality. see what needs to happen, right now its too tight. perfect beagle gets .95 english foxhound. or instead of checking agianst a passing_prob, check that its in top 3. this might work well if its tight, but not well if there are less breeds? cus if a dog looks like no other dog, un-lookalike ones will get in top 3? #also, need to prevent random shots, or drawings? try cartoonish drawings like something that is just a crude outline and black spots. but prevent those from getting one. so if top 3 re all .3, .2, .2, then no. so it has to be in top 3 and about .3? or something. just test every breed. #with top 3 youll easily be able to fool. anything that looks like a beagle can pass. a bassett hound? try this(update: maybe its fine...).
 
 
 
@@ -162,37 +162,48 @@ def user(username):
 		return redirect(url_for('login'))
 	conn = db_connect()
 	c = conn.cursor()
-	c.execute("""SELECT game_name FROM games 
+
+	c.execute("""SELECT game_name FROM games
 		         WHERE username = %s 
 		         ORDER BY join_date""", (username,))
-	session["game_names"] = [match[0] for match in c.fetchall()]
-	return render_template("games.html", username = username, game_names = session.get("game_names"))
+	game_names = [match[0] for match in c.fetchall()]
+
+	c.execute("""SELECT friend, status FROM friends
+		         WHERE username = %s 
+		         ORDER BY friend ASC""", (username,))
+	matches = c.fetchall() 
+	friends = [match[0] for match in matches if match[1] == "confirmed"]
+	pending_requests = [match[0] for match in matches if match[1] == "pending"]
+	print(pending_requests)
+	conn.close()
+
+	return render_template("user.html", username=username, game_names=game_names, friends=friends, pending_requests=pending_requests)
 
 
-@app.route("/user/<username>/<game_name>")
+@app.route("/user/<username>/<game_name>") #check that slots are in right order 
 def game(username, game_name):
 	if username != session.get("username"):
 		return redirect(url_for('login'))
 
 	conn = db_connect()
 	c = conn.cursor()
-	c.execute("""SELECT slot, cards.breed, filename, checked FROM cards, dogs WHERE cards.breed = dogs.breed AND cards.username = %s AND cards.game_name = %s""", (username, game_name))
-	card = sorted(c.fetchall())
+	c.execute("""SELECT slot, cards.breed, filename, checked FROM cards, dogs WHERE cards.breed = dogs.breed AND cards.username = %s AND cards.game_name = %s ORDER BY slot ASC""", (username, game_name))
+	card = c.fetchall()
 	conn.close()
-	return render_template("card.html", card=card, username=username, game_name=game_name)
+	return render_template("game.html", card=card, username=username, game_name=game_name)
 
 
 
 
 
 
-@app.route("/create_game", methods=["GET", "POST"])
-def create_game():
+@app.route("/create_game", methods=["GET", "POST"]) #games of same name???
+def create_game(): #can't invite yourself
 	if request.method == "POST":
 		game_name = request.form["game_name"]
 		if not game_name:
 			return render_template("create_game.html", username=session.get("username"), game_name_error_msg="Game name cannot be empty")
-		invitees = {user.strip() for user in request.form["invitees"].split(",") if user}
+		invitees = {invitee.strip() for invitee in request.form["invitees"].split(",") if invitee}
 		conn = db_connect()
 		c = conn.cursor()
 		c.execute("""SELECT game_name FROM games WHERE game_name = %s;""", (game_name,))
@@ -255,10 +266,6 @@ def create_card(game_name):
 
 
 
-@app.route("/vidtest")
-def vidtest():
-	return render_template("vidtest.html")
-
 
 @app.route("/test_upload", methods=["POST"]) ###use ajax...
 def test_upload(): ## give infer image without saving?
@@ -268,8 +275,11 @@ def test_upload(): ## give infer image without saving?
 		raw_file = request.files["file"].read()
 		probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
 		submit_breed = request.form['breed'].lower().replace(' ', '_')
+		for i in range(5):
+			temp, tempp = probs.take([i]).values.tolist()[0]
+			print(temp, tempp)
 		guess_breed, guess_prob = probs.take([0]).values.tolist()[0]
-		
+		print(guess_prob, guess_breed)
 		if guess_breed == submit_breed and guess_prob > PASSING_PROB:
 			slot = request.form['slot']
 			conn = db_connect()
@@ -278,8 +288,73 @@ def test_upload(): ## give infer image without saving?
 			conn.commit()
 			conn.close()
 			#check if theres a bingo here, or on redirect to game?
+		else:
+			pass #let them know it failed...
 		return redirect(url_for("game", username=username, game_name=game_name))
 
+
+@app.route("/friend_request", methods=["GET", "POST"])  ##check on all things that there is a check for username in session, etc..
+def friend_request(): #can't invite yourself. # cant send request to someone who is waiting for a response from you.
+	username = session.get("username")
+	if request.method == "POST":
+		requestees = {requestee.strip() for requestee in request.form["requestees"].split(",") if requestee}
+		conn = db_connect()
+		c = conn.cursor()
+
+		request_error_msg = None
+		invalid_requestees = []
+		for requestee in requestees:
+			c.execute("""SELECT username FROM users WHERE username = %s;""", (requestee,))
+			if not c.fetchone():
+				invalid_requestees.append(requestee)
+		if invalid_requestees:
+			request_error_msg = "Usernames '" + "', '".join(invalid_requestees) + "' do not exist"
+		else:
+			for requestee in requestees:
+				c.execute("""SELECT * FROM friends WHERE username = %s AND friend = %s;""", (username, requestee,))
+				if c.fetchone():
+					invalid_requestees.append(requestee)
+			if invalid_requestees:
+				request_error_msg = "You are already friend with or have a pending request with '" + "', '".join(invalid_requestees) + "'"
+
+
+		if request_error_msg:
+			conn.close()
+			return render_template("friend_request.html", username=username, request_error_msg=request_error_msg)
+		else:
+			for requestee in requestees:
+				c.execute("""INSERT INTO friends (username, friend, status) VALUES (%s, %s, 'pending');""", (requestee, username))
+			conn.commit()
+			conn.close()
+			return redirect(url_for("user", username=username))
+
+	elif not username:
+		return redirect(url_for("login"))
+	else:
+		return render_template("friend_request.html", username=username)
+
+
+
+@app.route("/handle_request/<requester>/<confirm>", methods=["GET"]) #get? make things post that can be post...
+def handle_request(requester, confirm):
+	username = session.get("username")
+	if not username:
+		return redirect(url_for("login"))
+	conn = db_connect()
+	c = conn.cursor()
+
+	if confirm == "True": #uhhh 
+		c.execute("""UPDATE friends SET status = 'confirmed' WHERE username = %s AND friend = %s;""", (username, requester))
+		c.execute("""INSERT INTO friends(username, friend, status) VALUES (%s, %s, 'confirmed');""", (requester, username))
+	else:
+		c.execute("""DELETE FROM friends WHERE username = %s AND friend = %s;""", (username, requester))
+	conn.commit()
+	conn.close()
+	return redirect(url_for('user', username=username))
+
+@app.rout("/ios-test")
+def ios-test():
+	return "ios-test worked"
 
 
 
