@@ -352,7 +352,7 @@ def handle_request(requester, confirm):
 	conn.close()
 	return redirect(url_for('user', username=username))
 
-@app.rout("/ios_test")
+@app.route("/ios_test")
 def ios_test():
 	return "ios_test worked"
 
