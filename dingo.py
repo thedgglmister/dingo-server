@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from os import urandom, path, environ
 import random ##
+import json
 from breed_classifier.inference.classify import infer
 from breed_classifier.common import consts
 from urllib import parse
@@ -99,22 +100,30 @@ def email_availability():
 
 
 
-@app.route("/", methods=["GET", "POST"])
-def login():
-	if request.method == "POST":
-		username = request.form.get("username")
-		pw = request.form.get("password")
-		error_msg = validate_user(username, pw)
-		if error_msg == None:
-			session["username"] = username
-			return redirect(url_for('user', username = username))
-		else:
-			return render_template("login.html", error_msg = error_msg)
+# @app.route("/", methods=["GET", "POST"])
+# def login():
+# 	if request.method == "POST":
+# 		username = request.form.get("username")
+# 		pw = request.form.get("password")
+# 		error_msg = validate_user(username, pw)
+# 		if error_msg == None:
+# 			session["username"] = username
+# 			return redirect(url_for('user', username = username))
+# 		else:
+# 			return render_template("login.html", error_msg = error_msg)
+# 	else:
+# 		if "username" in session:
+# 			return redirect(url_for('user', username = session["username"]))
+# 		else:
+# 			return render_template("login.html")
+
+@app.route("/", methods=["GET"])      ####NEW#####
+def init():
+	if session.get('username'):
+		return render_template('user.html')
 	else:
-		if "username" in session:
-			return redirect(url_for('user', username = session["username"]))
-		else:
-			return render_template("login.html")
+		return render_template('signup.html')
+
 
 
 
@@ -130,23 +139,54 @@ def login():
 ######################
 
 
-@app.route("/signup", methods=["GET", "POST"])
+# @app.route("/signup", methods=["GET", "POST"])
+# def signup():
+# 	if request.method == "POST":
+# 		username = request.form['username']
+# 		email = request.form['email']
+# 		pw = request.form["password"]
+# 		conn = db_connect()
+# 		c = conn.cursor()
+# 		c.execute("""INSERT INTO users (username, password, email) VALUES (%s, %s, %s);""", (username, generate_password_hash(pw), email))
+# 		conn.commit()
+# 		conn.close()
+# 		session["username"] = username
+# 		return redirect(url_for('user', username = username))
+# 	elif "username" in session:
+# 		return redirect(url_for('user', username = session["username"]))
+# 	else:
+# 		return render_template("signup.html")
+
+@app.route("/signup", methods=["POST"])   ####NEW#####
 def signup():
-	if request.method == "POST":
-		username = request.form['username']
-		email = request.form['email']
-		pw = request.form["password"]
-		conn = db_connect()
-		c = conn.cursor()
-		c.execute("""INSERT INTO users (username, password, email) VALUES (%s, %s, %s);""", (username, generate_password_hash(pw), email))
-		conn.commit()
-		conn.close()
-		session["username"] = username
-		return redirect(url_for('user', username = username))
-	elif "username" in session:
-		return redirect(url_for('user', username = session["username"]))
-	else:
-		return render_template("signup.html")
+	response = {}
+	username = request.form['username']
+	email = request.form['email']
+	pw = request.form["password"]
+
+
+	conn = db_connect()
+	c = conn.cursor()
+
+	#check if username or email already exist
+	c.execute("""SELECT username FROM users WHERE username = %s;""", (username,))
+	if c.fetchone():
+		response['error'] = "username already exists"
+		return json.dump(response)
+	c.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
+	if c.fetchone():
+		response['error'] = "email has already been used"
+		return json.dump(response)
+	c.execute("""INSERT INTO users (username, password, email) VALUES (%s, %s, %s);""", (username, generate_password_hash(pw), email))
+	conn.commit()
+	conn.close()
+	session["username"] = username
+	response['new_page'] = render_template('user.html')
+	return json.dump(response)
+
+
+
+
 
 
 @app.route("/logout")
@@ -352,9 +392,7 @@ def handle_request(requester, confirm):
 	conn.close()
 	return redirect(url_for('user', username=username))
 
-@app.route("/ios_test")
-def ios_test():
-	return "ios_test worked"
+
 
 
 
