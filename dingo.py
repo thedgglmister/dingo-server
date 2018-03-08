@@ -136,7 +136,7 @@ def login():
 		response['new_page'] = render_template('user.html')
 	else:
 		response['error'] = error_msg
-	return json.dump(response)
+	return json.dumps(response)
 
 
 
@@ -197,7 +197,7 @@ def signup():
 	conn.close()
 	session["username"] = username
 	response['new_page'] = render_template('user.html')
-	return json.dump(response)
+	return json.dumps(response)
 
 
 
