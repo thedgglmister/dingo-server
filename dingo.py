@@ -125,6 +125,20 @@ def init():
 		return render_template('signup.html')
 
 
+@app.route("/login", methods=["POST"])   ###NEW######
+def login():
+	username = request.form.get("username")
+	pw = request.form.get("password")
+	error_msg = validate_user(username, pw)
+	if error_msg == None:
+		session['username'] = username
+		response['new_page'] = render_template('user.html')
+	else:
+		response['error'] = error_msg
+	return json.dump(response)
+
+
+
 
 
 
@@ -160,9 +174,9 @@ def init():
 @app.route("/signup", methods=["POST"])   ####NEW#####
 def signup():
 	response = {}
-	username = request.form['username']
-	email = request.form['email']
-	pw = request.form["password"]
+	username = request.form.get('username')
+	email = request.form.get('email')
+	pw = request.form.get("password")
 
 
 	conn = db_connect()
