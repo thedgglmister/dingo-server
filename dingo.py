@@ -117,26 +117,16 @@ def email_availability():
 # 		else:
 # 			return render_template("login.html")
 
-@app.route("/", methods=["GET"])      ####NEW#####
-def init():
-	if session.get('username'):
-		return render_template('user.html')
-	else:
-		return render_template('signup.html')
-
 
 @app.route("/login", methods=["POST"])   ###NEW######
 def login():
-	response = {}
 	username = request.form.get("username")
 	pw = request.form.get("password")
 	error_msg = validate_user(username, pw)
 	if error_msg == None:
-		session['username'] = username
-		response['new_page'] = render_template('user.html')
+		return 'success'
 	else:
-		response['error'] = error_msg
-	return json.dumps(response)
+		return error_msg
 
 
 
@@ -174,11 +164,9 @@ def login():
 
 @app.route("/signup", methods=["POST"])   ####NEW#####
 def signup():
-	response = {}
 	username = request.form.get('username')
 	email = request.form.get('email')
 	pw = request.form.get("password")
-
 
 	conn = db_connect()
 	c = conn.cursor()
@@ -186,28 +174,24 @@ def signup():
 	#check if username or email already exist
 	c.execute("""SELECT username FROM users WHERE username = %s;""", (username,))
 	if c.fetchone():
-		response['error'] = "username already exists"
-		return json.dump(response)
+		return "username already exists"
 	c.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
 	if c.fetchone():
-		response['error'] = "email has already been used"
-		return json.dump(response)
+		return "email address has already been used"
 	c.execute("""INSERT INTO users (username, password, email) VALUES (%s, %s, %s);""", (username, generate_password_hash(pw), email))
 	conn.commit()
 	conn.close()
-	session["username"] = username
-	response['new_page'] = render_template('user.html')
-	return json.dumps(response)
+	return "success"
 
 
 
 
 
 
-@app.route("/logout")
-def logout():
-	session.clear()
-	return redirect(url_for('login'))
+# @app.route("/logout")
+# def logout():
+# 	session.clear()
+# 	return redirect(url_for('login'))
 
 
 
