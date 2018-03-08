@@ -127,6 +127,7 @@ def init():
 
 @app.route("/login", methods=["POST"])   ###NEW######
 def login():
+	response = {}
 	username = request.form.get("username")
 	pw = request.form.get("password")
 	error_msg = validate_user(username, pw)
