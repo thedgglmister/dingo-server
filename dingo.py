@@ -1,4 +1,4 @@
-from flask import Flask, flash, request, session, render_template, redirect, url_for, send_from_directory
+from flask import Flask, flash, request, session, render_template, redirect, url_for, send_from_directory, jsonify
 from psycopg2 import connect
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -390,6 +390,40 @@ def handle_request(requester, confirm):
 	conn.commit()
 	conn.close()
 	return redirect(url_for('user', username=username))
+
+
+
+@app.route("/validate_breed", methods=["POST"]) ###use ajax... ?huh? //need to update backend database and push to everyone else... 
+def validate_breed(): ## give infer image without saving?
+	if request.method == "POST":
+		raw_file = request.form["imgData"]
+		submit_breed = request.form['breed'].lower().replace(' ', '_')
+		probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
+		top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
+		for i in range(3):####
+			print(top3[i][0], top3[i][1]) ###
+		response = {'match': False}
+		for i in range(3):
+			if top3[i][0] == submit_breed and top3[i][1] > PASSING_PROB:
+				response['match'] = True
+		return jsonify(response)
+
+
+
+
+
+
+#		if guess_breed == submit_breed and guess_prob > PASSING_PROB:
+#			slot = request.form['slot']
+#			conn = db_connect()
+#			c = conn.cursor()
+#			c.execute("UPDATE cards SET checked=TRUE WHERE username = %s AND game_name = %s AND slot = %s", (username, game_name, slot))
+#			conn.commit()
+#			conn.close()
+			#check if theres a bingo here, or on redirect to game?
+#		else:
+#			pass #let them know it failed...
+#		return redirect(url_for("game", username=username, game_name=game_name))
 
 
 
