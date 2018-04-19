@@ -430,8 +430,9 @@ def validate_breed(): ## give infer image without saving?
 
 @app.route('/dumbtest')
 def dumbtest():
-	response = {'match': 'yes'}
-	return jsonify(response)
+	resp = jsonify({'match': 'yes'})
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+	return resp
 
 
 
