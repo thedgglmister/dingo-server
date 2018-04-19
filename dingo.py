@@ -402,11 +402,13 @@ def validate_breed(): ## give infer image without saving?
 		top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
 		for i in range(3):####
 			print(top3[i][0], top3[i][1]) ###
-		response = {'match': False}
+		response_data = {'match': False}
 		for i in range(3):
 			if top3[i][0] == submit_breed and top3[i][1] > PASSING_PROB:
 				response['match'] = True
-		return jsonify(response)
+		response = jsonify(response_data)
+		response.headers['Access-Control-Allow-Origin'] = '*'
+		return response
 
 
 
