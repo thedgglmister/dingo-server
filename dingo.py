@@ -396,8 +396,8 @@ def handle_request(requester, confirm):
 @app.route("/validate_breed", methods=["POST"]) ###use ajax... ?huh? //need to update backend database and push to everyone else... 
 def validate_breed(): ## give infer image without saving?
 	if request.method == "POST":
-		data = request.get_json(force=True)
-		raw_file = data['imgData']
+		raw_file = request.files['file']
+		breedName = request.form['breedName'] #or data?
 		submit_breed = data['breedName'].lower().replace(' ', '_')
 		probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
 		top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
