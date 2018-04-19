@@ -428,6 +428,12 @@ def validate_breed(): ## give infer image without saving?
 
 
 
+@app.route('/dumbtest')
+def dumbtest():
+	response = {'match': 'yes'}
+	return jsonify(response)
+
+
 
 if __name__ == "__main__":
 	port = int(environ.get("PORT", 5000))
