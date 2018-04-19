@@ -397,8 +397,7 @@ def handle_request(requester, confirm):
 def validate_breed(): ## give infer image without saving?
 	if request.method == "POST":
 		raw_file = request.files['file']
-		breedName = request.form['breedName'] #or data?
-		submit_breed = data['breedName'].lower().replace(' ', '_')
+		submit_breed = request.form['breedName'].lower().replace(' ', '_') #or data?
 		probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
 		top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
 		for i in range(3):####
