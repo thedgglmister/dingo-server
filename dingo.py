@@ -400,7 +400,7 @@ def validate_breed(): ## give infer image without saving?
 		#raw_file = data['imgData']
 		#submit_breed = data['breedName'].lower().replace(' ', '_')
 		print(request)
-		raw_file = request.files['file']
+		raw_file = request.files['file'].read()
 		#submit_breed = request.form['breedName'].lower().replace(' ', '_') #or data?
 		probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
 		top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
