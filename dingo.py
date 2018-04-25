@@ -1,4 +1,4 @@
-from flask import Flask, flash, request, session, render_template, redirect, url_for, send_from_directory, jsonify
+from flask import Flask, flash, request, session, render_template, redirect, url_for, send_from_directory, jsonify, Response
 from psycopg2 import connect
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -355,6 +355,29 @@ def handle_request(requester, confirm):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route("/validate_breed", methods=["POST"]) ###use ajax... ?huh? //need to update backend database and push to everyone else... 
 def validate_breed(): ## give infer image without saving?
 	raw_file = request.files['file'].read()
@@ -392,14 +415,16 @@ def validate_breed(): ## give infer image without saving?
 def signup():
 	print("$$$" + request.method)
 	if request.method == "OPTIONS":
-		response = Flask.Response("hjghjgjhg")
+		response = Response("hjghjgjhg")
 		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
 		return response
 
-	email = request.form.get('emailAddress')
-	first_name = request.form.get('firstName')
-	last_name = request.form.get('lastName')
-	pw = request.form.get("password")
+	request_data = request.get_json()
+	email = request_data.get('emailAddress')
+	first_name = request_data.get('firstName')
+	last_name = request_data.get('lastName')
+	pw = request_data.get("password")
 
 	if email == "error":  #####
 		return "errormsg!!", 401 ####
