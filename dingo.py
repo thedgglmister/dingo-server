@@ -12,8 +12,8 @@ from sys import argv
 
 
 ###everything needs to get redirected if not logged in etc.
-### 	response.headers['Access-Control-Allow-Origin'] = '*'   look into these...
-
+### 	response.headers['Access-Control-Allow-Origin'] = '*'   look into these... (put origin: [app domain] in request then replace * with [app domain])
+## is preflighting slow? can i get around this?
 
 app = Flask(__name__)
 app.secret_key = urandom(24)
@@ -144,44 +144,6 @@ def login():
 ######################
 
 
-# @app.route("/signup", methods=["GET", "POST"])
-# def signup():
-# 	if request.method == "POST":
-# 		username = request.form['username']
-# 		email = request.form['email']
-# 		pw = request.form["password"]
-# 		conn = db_connect()
-# 		c = conn.cursor()
-# 		c.execute("""INSERT INTO users (username, password, email) VALUES (%s, %s, %s);""", (username, generate_password_hash(pw), email))
-# 		conn.commit()
-# 		conn.close()
-# 		session["username"] = username
-# 		return redirect(url_for('user', username = username))
-# 	elif "username" in session:
-# 		return redirect(url_for('user', username = session["username"]))
-# 	else:
-# 		return render_template("signup.html")
-
-@app.route("/signup", methods=["POST"])   ####NEW#####
-def signup():
-	username = request.form.get('username')
-	email = request.form.get('email')
-	pw = request.form.get("password")
-
-	conn = db_connect()
-	c = conn.cursor()
-
-	#check if username or email already exist
-	c.execute("""SELECT username FROM users WHERE username = %s;""", (username,))
-	if c.fetchone():
-		return "username already exists"
-	c.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
-	if c.fetchone():
-		return "email address has already been used"
-	c.execute("""INSERT INTO users (username, password, email) VALUES (%s, %s, %s);""", (username, generate_password_hash(pw), email))
-	conn.commit()
-	conn.close()
-	return "success"
 
 
 
@@ -424,23 +386,7 @@ def validate_breed(): ## give infer image without saving?
 
 
 
-# @app.route("/signup", methods=["GET", "POST"])
-# def signup():
-# 	if request.method == "POST":
-# 		username = request.form['username']
-# 		email = request.form['email']
-# 		pw = request.form["password"]
-# 		conn = db_connect()
-# 		c = conn.cursor()
-# 		c.execute("""INSERT INTO users (username, password, email) VALUES (%s, %s, %s);""", (username, generate_password_hash(pw), email))
-# 		conn.commit()
-# 		conn.close()
-# 		session["username"] = username
-# 		return redirect(url_for('user', username = username))
-# 	elif "username" in session:
-# 		return redirect(url_for('user', username = session["username"]))
-# 	else:
-# 		return render_template("signup.html")
+
 
 @app.route("/signup", methods=["POST"])   ####NEW#####
 def signup():
