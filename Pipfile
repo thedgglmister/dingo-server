@@ -15,6 +15,7 @@ tensorflow = "*"
 sklearn = "*"
 scipy = "*"
 gunicorn = "*"
+flask-socketio = "*"
 
 
 [dev-packages]

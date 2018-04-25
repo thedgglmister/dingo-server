@@ -12,7 +12,7 @@ from sys import argv
 
 
 ###everything needs to get redirected if not logged in etc.
-
+### 	response.headers['Access-Control-Allow-Origin'] = '*'   look into these...
 
 
 app = Flask(__name__)
@@ -395,30 +395,19 @@ def handle_request(requester, confirm):
 
 @app.route("/validate_breed", methods=["POST"]) ###use ajax... ?huh? //need to update backend database and push to everyone else... 
 def validate_breed(): ## give infer image without saving?
-	if request.method == "POST":
-		#data = request.get_json(force=True)
-		#raw_file = data['imgData']
-		#submit_breed = data['breedName'].lower().replace(' ', '_')
-		print(request)
-		raw_file = request.files['file'].read()
-		submit_breed = request.form['breedName'].lower().replace(' ', '_') #or data?
-		probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
-		top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
-		for i in range(3):####
-			print(top3[i][0], top3[i][1]) ###
-		response_data = {'match': False}
-		for i in range(3):
-			if top3[i][0] == submit_breed and top3[i][1] > PASSING_PROB:
-				response['match'] = True
-		response = jsonify(response_data)
-		response.headers['Access-Control-Allow-Origin'] = '*'
-		return response
-
-
-
-
-
-
+	raw_file = request.files['file'].read()
+	submit_breed = request.form['breedName'].lower().replace(' ', '_') #or data?
+	probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
+	top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
+	for i in range(3):####
+		print(top3[i][0], top3[i][1]) ###
+	response_data = {'match': False}
+	for i in range(3):
+		if top3[i][0] == submit_breed and top3[i][1] > PASSING_PROB:
+			response['match'] = True
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
 #		if guess_breed == submit_breed and guess_prob > PASSING_PROB:
 #			slot = request.form['slot']
 #			conn = db_connect()
@@ -426,7 +415,7 @@ def validate_breed(): ## give infer image without saving?
 #			c.execute("UPDATE cards SET checked=TRUE WHERE username = %s AND game_name = %s AND slot = %s", (username, game_name, slot))
 #			conn.commit()
 #			conn.close()
-			#check if theres a bingo here, or on redirect to game?
+		#check if theres a bingo here, or on redirect to game?
 #		else:
 #			pass #let them know it failed...
 #		return redirect(url_for("game", username=username, game_name=game_name))
@@ -434,11 +423,54 @@ def validate_breed(): ## give infer image without saving?
 
 
 
-@app.route('/dumbtest')
-def dumbtest():
-	resp = jsonify({'match': 'yes'})
-	resp.headers['Access-Control-Allow-Origin'] = '*'
-	return resp
+
+# @app.route("/signup", methods=["GET", "POST"])
+# def signup():
+# 	if request.method == "POST":
+# 		username = request.form['username']
+# 		email = request.form['email']
+# 		pw = request.form["password"]
+# 		conn = db_connect()
+# 		c = conn.cursor()
+# 		c.execute("""INSERT INTO users (username, password, email) VALUES (%s, %s, %s);""", (username, generate_password_hash(pw), email))
+# 		conn.commit()
+# 		conn.close()
+# 		session["username"] = username
+# 		return redirect(url_for('user', username = username))
+# 	elif "username" in session:
+# 		return redirect(url_for('user', username = session["username"]))
+# 	else:
+# 		return render_template("signup.html")
+
+@app.route("/signup", methods=["POST"])   ####NEW#####
+def signup():
+
+	email = request.form.get('emailAddress')
+	first_name = request.form.get('firstName')
+	last_name = request.form.get('lastName')
+	pw = request.form.get("password")
+
+	if email = "error":  #####
+		return "errormsg!!", 401 ####
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	#check if email already exist
+	curs.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
+	response_data = {}
+	if curs.rowcount > 0:
+		response_data['success'] = False
+		response_data['error_msg'] = "Email Address {} already exists"
+	else:
+		curs.execute("""INSERT INTO users (first_name, last_name, password, email) VALUES (%s, %s, %s);""", (first_name, last_name, generate_password_hash(pw), email))
+		conn.commit()
+		response_data['success'] = True
+	conn.close()
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
 
 
 
