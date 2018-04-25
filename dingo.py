@@ -388,8 +388,12 @@ def validate_breed(): ## give infer image without saving?
 
 
 
-@app.route("/signup", methods=["POST"])   ####NEW#####
+@app.route("/signup", methods=["POST",])   ####NEW#####
 def signup():
+	if request.method == "OPTION":
+		response = Flask.Response("hjghjgjhg")
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		return response
 
 	email = request.form.get('emailAddress')
 	first_name = request.form.get('firstName')
