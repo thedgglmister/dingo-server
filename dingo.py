@@ -390,7 +390,7 @@ def validate_breed(): ## give infer image without saving?
 
 @app.route("/signup", methods=["POST", "OPTIONS"])   ####NEW#####
 def signup():
-	print("$$$" + request.methog)
+	print("$$$" + request.method)
 	if request.method == "OPTIONS":
 		response = Flask.Response("hjghjgjhg")
 		response.headers['Access-Control-Allow-Origin'] = "*"

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "40030d2729729ad672acc8a1c02d8a483191f30bee76b856eef76aefa7f445c5"
+            "sha256": "dce66a42ce396aef558f0fa873ce5de8b3b1dabe23c8f2575407cc0d37d6074a"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -60,6 +60,14 @@
                 "sha256:49f44461237b69ecd901cc7ce66feea0319b9158743dd27a2899962ab214dac1"
             ],
             "version": "==0.12.2"
+        },
+        "flask-cors": {
+            "hashes": [
+                "sha256:55eb3864b4290f939ff19a2250fcb47d8c0f63d250c6780b922629299d011ec8",
+                "sha256:ac4b81b3d90f5f18714c995c807f94501df8c9bbc22ef4261c1cd850748c3850",
+                "sha256:62ebc5ad80dc21ca0ea9f57466c2c74e24a62274af890b391790c260eb7b754b"
+            ],
+            "version": "==3.0.3"
         },
         "flask-socketio": {
             "hashes": [
@@ -393,7 +401,6 @@
                 "sha256:9cdc8ab2cc9c3c2e2727a4b67c22881dbb0e1c503d592992594c5e131c867107",
                 "sha256:1ae8153bed701cb062913b72429bcf854ba824f973735427681882a688cb55ce"
             ],
-            "markers": "python_version >= '3'",
             "version": "==0.31.0"
         }
     },

@@ -16,6 +16,7 @@ sklearn = "*"
 scipy = "*"
 gunicorn = "*"
 flask-socketio = "*"
+flask-cors = "*"
 
 
 [dev-packages]
