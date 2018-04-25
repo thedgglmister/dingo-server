@@ -396,7 +396,7 @@ def signup():
 	last_name = request.form.get('lastName')
 	pw = request.form.get("password")
 
-	if email = "error":  #####
+	if email == "error":  #####
 		return "errormsg!!", 401 ####
 
 	conn = db_connect()
