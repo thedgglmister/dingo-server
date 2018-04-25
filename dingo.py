@@ -407,40 +407,42 @@ def validate_breed(): ## give infer image without saving?
 
 
 
+#####REACT######
 
 
 
-
-@app.route("/signup", methods=["POST", "OPTIONS"])   ####NEW#####
+@app.route("/signup", methods=["POST", "OPTIONS"])   
 def signup():
-	print("$$$" + request.method)
 	if request.method == "OPTIONS":
-		response = Response("hjghjgjhg")
+		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
 		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
 		return response
-
+	print(1)
 	request_data = request.get_json()
 	email = request_data.get('emailAddress')
 	first_name = request_data.get('firstName')
 	last_name = request_data.get('lastName')
 	pw = request_data.get("password")
-
+	print(2)
 	if email == "error":  #####
 		return "errormsg!!", 401 ####
 
 	conn = db_connect()
 	curs = conn.cursor()
-
+	print(3)
 	#check if email already exist
 	curs.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
 	response_data = {}
 	if curs.rowcount > 0:
+		print(4)
 		response_data['success'] = False
 		response_data['error_msg'] = "Email Address {} already exists"
 	else:
+		print(5)
 		curs.execute("""INSERT INTO users (first_name, last_name, password, email) VALUES (%s, %s, %s, %s);""", (first_name, last_name, generate_password_hash(pw), email))
 		conn.commit()
+		print(6)
 		response_data['success'] = True
 	conn.close()
 	response = jsonify(response_data)
