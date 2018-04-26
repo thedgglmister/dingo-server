@@ -459,6 +459,7 @@ def homedata():
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
 		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
 
 	request_data = request.get_json()
 	my_uid = request_data.user_id
@@ -472,8 +473,8 @@ def homedata():
 	response_data = {'games': []}  
 	for game in my_games:
 		my_gpid, gid = game
-		curs.execute("""SELECT first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s AND user_id != %s;""", (gid, user_id))
-		players = [{'name': result[0], 'img': result[1]} for result in curs.fetchall()]
+		curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s AND user_id != %s;""", (gid, user_id)) #order by joindate?
+		players = [{'gpid': result[0], 'name': result[1], 'img': result[2]} for result in curs.fetchall()]
 		game_data = {'game_id': gid, 'my_gpid': my_gpid, 'players': players}
 		response_data['games'].append(game_data)
 
@@ -484,8 +485,32 @@ def homedata():
 
 
 
+@app.route("/newgame", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def newgame():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
 
+	request_data = request.get_json()
+	my_uid = request_data.user_id
 
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""INSERT INTO games (game_id) VALUES (NULL) RETURNING game_id;""")
+	new_gid = curs.fetchone()[0]
+	curs.execute("""INSERT INTO gameplayers (gameplayer_id, game_id, user_id) VALUES (NULL, %s, %s);""", (curs.fetchone()[0], my_uid))
+	new_gpid = curs.fetchone()[0]
+	#add squares for game!!!
+	conn.commit()
+	conn.close()
+
+	response_data = {'game_id': new_gid, 'my_gpid': new_gpid, 'players': []}
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
 
 
 
