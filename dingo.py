@@ -15,6 +15,8 @@ from flask_cors import CORS ##need this? uninstall? deal with preflighting manua
 ###everything needs to get redirected if not logged in etc.
 ### 	response.headers['Access-Control-Allow-Origin'] = '*'   look into these... (put origin: [app domain] in request then replace * with [app domain])
 ## is preflighting slow? can i get around this?
+##if a server error happens(4xx,5xx), does it include cors headers to get that back to client? or will it get a cors error? i think flask_cors fixes this..?
+## RETURNING in SQL only for postgresql...
 
 app = Flask(__name__)
 #CORS(app)
@@ -428,7 +430,7 @@ def signup():
 	pw = request_data.get("password")
 
 	if email == "error":  #####
-		return Response(status=401, headers={'Access-Control-Allow-Origin': '*'}) ###
+		return Response(status=401, headers={'Access-Control-Allow-Origin': '*'}) ####
 
 	conn = db_connect()
 	curs = conn.cursor()
@@ -440,9 +442,11 @@ def signup():
 		response_data['success'] = False
 		response_data['error_msg'] = "Email Address {} already exists"
 	else:
-		curs.execute("""INSERT INTO users (first_name, last_name, password, email) VALUES (%s, %s, %s, %s);""", (first_name, last_name, generate_password_hash(pw), email))
+		curs.execute("""INSERT INTO users (first_name, last_name, password, email) VALUES (%s, %s, %s, %s) RETURNING user_id;""", (first_name, last_name, generate_password_hash(pw), email))
 		conn.commit()
+		new_user_id = curs.fetchone()[0]
 		response_data['success'] = True
+		response_data['user_id'] = new_user_id
 	conn.close()
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
