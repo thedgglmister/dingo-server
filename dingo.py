@@ -440,7 +440,7 @@ def signup():
 	response_data = {}
 	if curs.rowcount > 0:
 		response_data['success'] = False
-		response_data['error_msg'] = "Email Address {} already exists"
+		response_data['error_msg'] = "Email Address {} already exists".format(email)
 	else:
 		curs.execute("""INSERT INTO users (first_name, last_name, password, email) VALUES (%s, %s, %s, %s) RETURNING user_id;""", (first_name, last_name, generate_password_hash(pw), email))
 		conn.commit()
@@ -451,6 +451,41 @@ def signup():
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
+
+
+@app.route("/homedata", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def homedata():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+
+	request_data = request.get_json()
+	my_uid = request_data.user_id
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""SELECT gameplayer_id, game_id FROM gameplayers WHERE user_id = %s;""", (my_uid,))
+	my_games = curs.fetchall()
+
+	response_data = {'games': []}  
+	for game in my_games:
+		my_gpid, gid = game
+		curs.execute("""SELECT first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s AND user_id != %s;""", (gid, user_id))
+		players = [{'name': result[0], 'img': result[1]} for result in curs.fetchall()]
+		game_data = {'game_id': gid, 'my_gpid': my_gpid, 'players': players}
+		response_data['games'].append(game_data)
+
+	conn.close()
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
+
+
 
 
 
