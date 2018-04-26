@@ -413,13 +413,15 @@ def validate_breed(): ## give infer image without saving?
 
 
 
-@app.route("/signup", methods=["POST",])# "OPTIONS"])   
+@app.route("/signup", methods=["POST", "GET"])# "OPTIONS"])   
 def signup():
 #	if request.method == "OPTIONS":
 #		response = Response()
 #		response.headers['Access-Control-Allow-Origin'] = "*"
 #		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
 #		return response
+	if request.method == "GET":
+		return "booooyah"
 	print(1)
 	request_data = request.get_json()
 	email = request_data.get('emailAddress')
@@ -448,7 +450,7 @@ def signup():
 		response_data['success'] = True
 	conn.close()
 	response = jsonify(response_data)
-#	response.headers['Access-Control-Allow-Origin'] = '*'
+	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
 
 
