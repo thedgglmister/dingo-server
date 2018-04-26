@@ -499,9 +499,9 @@ def newgame():
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""INSERT INTO games (game_id) VALUES (NULL) RETURNING game_id;""")
+	curs.execute("""INSERT INTO games (game_id) VALUES (DEFAULT) RETURNING game_id;""")
 	new_gid = curs.fetchone()[0]
-	curs.execute("""INSERT INTO gameplayers (gameplayer_id, game_id, user_id) VALUES (NULL, %s, %s);""", (curs.fetchone()[0], my_uid))
+	curs.execute("""INSERT INTO gameplayers (gameplayer_id, game_id, user_id) VALUES (DEFAULT, %s, %s);""", (curs.fetchone()[0], my_uid))
 	new_gpid = curs.fetchone()[0]
 	#add squares for game!!!
 	conn.commit()
