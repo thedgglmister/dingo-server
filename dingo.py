@@ -462,7 +462,7 @@ def homedata():
 		return response
 
 	request_data = request.get_json()
-	my_uid = request_data.user_id
+	my_uid = request_data['user_id']
 
 	conn = db_connect()
 	curs = conn.cursor()
@@ -474,7 +474,7 @@ def homedata():
 	for game in my_games:
 		my_gpid, gid = game
 		curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s AND user_id != %s;""", (gid, user_id)) #order by joindate?
-		players = [{'gpid': result[0], 'name': result[1], 'img': result[2]} for result in curs.fetchall()]
+		players = [{'gpid': result[0], 'first_name': result[1], 'img': result[2]} for result in curs.fetchall()]
 		game_data = {'game_id': gid, 'my_gpid': my_gpid, 'players': players}
 		response_data['games'].append(game_data)
 
@@ -494,7 +494,7 @@ def newgame():
 		return response
 
 	request_data = request.get_json()
-	my_uid = request_data.user_id
+	my_uid = request_data['user_id']
 
 	conn = db_connect()
 	curs = conn.cursor()
