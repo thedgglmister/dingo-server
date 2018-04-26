@@ -9,7 +9,7 @@ from breed_classifier.inference.classify import infer
 from breed_classifier.common import consts
 from urllib import parse
 from sys import argv
-from flask_cors import CORS
+from flask_cors import CORS ##need this? uninstall?
 
 
 ###everything needs to get redirected if not logged in etc.
@@ -17,7 +17,7 @@ from flask_cors import CORS
 ## is preflighting slow? can i get around this?
 
 app = Flask(__name__)
-CORS(app)
+#CORS(app)
 app.secret_key = urandom(24)
 
 
@@ -413,15 +413,13 @@ def validate_breed(): ## give infer image without saving?
 
 
 
-@app.route("/signup", methods=["POST", "GET"])# "OPTIONS"])   
+@app.route("/signup", methods=["POST", ])# "OPTIONS"])   
 def signup():
 #	if request.method == "OPTIONS":
 #		response = Response()
 #		response.headers['Access-Control-Allow-Origin'] = "*"
 #		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
 #		return response
-	if request.method == "GET":
-		return "booooyah"
 	print(1)
 	request_data = request.get_json()
 	email = request_data.get('emailAddress')
