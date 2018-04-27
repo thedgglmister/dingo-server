@@ -501,7 +501,7 @@ def newgame():
 
 	curs.execute("""INSERT INTO games (game_id) VALUES (DEFAULT) RETURNING game_id;""")
 	new_gid = curs.fetchone()[0]
-	curs.execute("""INSERT INTO gameplayers (gameplayer_id, game_id, user_id) VALUES (DEFAULT, %s, %s);""", (new_gid, my_uid))
+	curs.execute("""INSERT INTO gameplayers (gameplayer_id, game_id, user_id) VALUES (DEFAULT, %s, %s) RETURNING gameplayer_id;""", (new_gid, my_uid))
 	new_gpid = curs.fetchone()[0]
 	#add squares for game!!!
 	conn.commit()
