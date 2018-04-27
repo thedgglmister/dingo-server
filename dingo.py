@@ -473,7 +473,7 @@ def homedata():
 	response_data = {'games': []}  
 	for game in my_games:
 		my_gpid, gid = game
-		curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s AND user_id != %s;""", (gid, user_id)) #order by joindate?
+		curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s AND user_id != %s;""", (gid, my_uid)) #order by joindate?
 		players = [{'gpid': result[0], 'first_name': result[1], 'img': result[2]} for result in curs.fetchall()]
 		game_data = {'game_id': gid, 'my_gpid': my_gpid, 'players': players}
 		response_data['games'].append(game_data)
