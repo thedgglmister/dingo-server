@@ -581,7 +581,9 @@ def accept_invite():
 
 	curs.execute("""DELETE FROM invitations WHERE invitation_id = %s RETURNING (game_id, invitee_id);""", (invitation_id,)) #delete all inviations to that
 	conn.commit()
-	game_id, user_id = curs.fetchone()
+	deleted_data = curs.fetchone()
+	print(deleted_data)
+	game_id, user_id = deleted_data
 
 	curs.execute("""INSERT INTO gameplayers (game_id, user_id) VALUES (%s, %s) RETURNING gameplayer_id;""", (game_id, user_id))
 	conn.commit()
