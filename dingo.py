@@ -474,50 +474,16 @@ def homedata():
 	conn.commit()
 	my_games = curs.fetchall()
 	print(4)
-	games_data = []
-	for my_gpid, game_id in my_games:
-		game_data = {}
+	games_data = [get_game_data(game_id, my_gpid, curs, conn) for my_gpid, game_id in my_games]
 
-
-		game_data['game_id'] = game_id
-
-##put in function...
-		curs.execute("""SELECT squares.dog_id, breed_name, img FROM squares INNER JOIN dogs ON squares.dog_id = dogs.dog_id WHERE game_id = %s ORDER BY index;""", (game_id,))
-		conn.commit()
-		game_data['squares'] = [{'dog_id': dog_id, 'breed_name': breed_name, 'img': img} for dog_id, breed_name, img in curs.fetchall()]
-
-
-		curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s ORDER BY gameplayers.join_time;""", (game_id,))
-		conn.commit()
-
-		players = [{'gpid': row[0], 'first_name': row[1], 'img': row[2]} for row in curs.fetchall()]
-		for i in range(len(players)):
-			if players[i]['gpid'] == my_gpid:
-				players.insert(0, players.pop(i))
-		game_data['players'] = players
-
-
-		curs.execute("""SELECT matches.gameplayer_id, index FROM gameplayers INNER JOIN matches ON gameplayers.gameplayer_id = matches.gameplayer_id WHERE game_id = %s;""", (game_id,))
-		conn.commit()
-		matches = defaultdict(list)
-		for gpid, index in curs.fetchall():
-			matches[gpid].append(index)
-		for player in game_data['players']:
-			player['matches'] = matches[player['gpid']]
-
-
-
-
-		#notifications...
-		game_data['notifications'] = []
-
-
-		games_data.append(game_data)
 
 
 
 	#get invitations
-	invitations = []
+	curs.execute("""SELECT invitation_id, first_name FROM invitations INNER JOIN users ON invitations.inviter_id = users.user_id WHERE invitee_id = %s ORDER BY sent_time;""", (my_user_id,))
+	curs.commit()
+
+	invitations = [{'invitation_id': invitation_id, 'inviter_name': first_name} for invitation_id, first_name in curs.fetchall()] 
 
 
 
@@ -525,14 +491,7 @@ def homedata():
 	response_data['games'] = games_data
 	response_data['invitations'] = invitations
 
-	##game_data looks like...
-	# {
-	#game_id: 323
-	#squares: [{dog_id:  , breed_name:   , index:    img:   }, {...}, ...]
-	#notifications: [FIGURE THIS OUT!]
-	#players: [{gpid:   ,  first_name:    ,   img:       ,  matches: [] }]
-	#me: {}
-	#} 
+
 
 	conn.close()
 	response = jsonify(response_data)
@@ -558,41 +517,152 @@ def newgame():
 	curs.execute("""INSERT INTO games (game_id) VALUES (DEFAULT) RETURNING game_id;""")
 	conn.commit()
 	new_game_id = curs.fetchone()[0]
-	curs.execute("""INSERT INTO gameplayers (gameplayer_id, game_id, user_id) VALUES (DEFAULT, %s, %s) RETURNING gameplayer_id;""", (new_game_id, my_user_id))
+	curs.execute("""INSERT INTO gameplayers (game_id, user_id) VALUES (%s, %s) RETURNING gameplayer_id;""", (new_game_id, my_user_id))
 	conn.commit()
 	new_gpid = curs.fetchone()[0]
 
 
 
-	#add squares for game!!!
-	curs.execute("""SELECT dog_id, breed_name, img FROM dogs;""")
+	#add squares for game
+	curs.execute("""SELECT dog_id FROM dogs;""")
 	conn.commit()
-	all_dogs = curs.fetchall()
-	random.shuffle(all_dogs)
-	squares = [{'index': index, 'dog_id': row[0],'breed_name': row[1], 'img': row[2]} for index, row in enumerate(all_dogs[:25])]
-	for square in squares:
-		curs.execute("""INSERT INTO squares (game_id, index, dog_id) VALUES (%s, %s, %s);""", (new_game_id, square['index'], square['dog_id']))
-		conn.commit()
+	all_dog_ids = curs.fetchall()
+	random.shuffle(all_dog_ids)
+	for index, dog_id in enumerate(all_dog_ids[:25]):
+		curs.execute("""INSERT INTO squares (game_id, index, dog_id) VALUES (%s, %s, %s);""", (new_game_id, index, dog_id))
+		conn.commit()		
 
-	curs.execute("""SELECT first_name, img FROM users WHERE user_id = %s;""", (my_user_id,))
-	conn.commit()
-	first_name, img = curs.fetchone()
+	game_data = get_game_data(new_game_id, my_gpid, curs, conn)
+
 	conn.close()
 
-	me = {}
-	me['gpid'] = new_gpid
-	me['first_name'] = first_name
-	me['img'] = img
-	me['matches'] = []
-
-	response_data = {}
-	response_data['game_id'] = new_game_id
-	response_data['squares'] = squares
-	response_data['notifications'] = []
-	response_data['players'] = [me]
-	response = jsonify(response_data)
+	response = jsonify(game_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
+
+
+
+@app.route("/invite", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def invite():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	inviter_id = request_data['inviter_id']
+	invitee_id = request_data['invitee_id']
+	game_id = request_data['game_id']
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""INSERT INTO invitations (invitee_id, game_id, inviter_id) VALUES (%s, %s, %s);""", (invitee_id, game_id, inviter_id))
+	conn.commit()
+
+	response = Response()
+	response.headers['Access-Control-Allow-Origin'] = "*"
+	return response
+
+
+
+@app.route("/accept_invite", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def accept_invite():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	invitation_id = request_data['invitation_id']
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""DELETE FROM invitations WHERE invitation_id = %s RETURNING (game_id, invitee_id);""", (invitation_id,)) #delete all inviations to that
+	conn.commit()
+	game_id, user_id = curs.fetchone()
+
+	curs.execute("""INSERT INTO gameplayers (game_id, user_id) VALUES (%s, %s) RETURNING gameplayer_id;""", (game_id, user_id))
+	conn.commit()
+	new_gpid = curs.fetchone()[0]
+
+	game_data = get_game_data(game_id, new_gpid, curs, conn)
+
+	conn.close()
+
+	response = jsonify(game_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+@app.route("/delete_invite", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def delete_invite():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	invitation_id = request_data['invitation_id']
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""DELETE FROM invitations WHERE invitation_id = %s;""", (invitation_id,))
+	conn.commit()
+
+	conn.close()
+
+	response = Response()
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
+
+
+
+##gets game data for game id, if gpid is present than its a game im in, other wise not. assume it is there for now... curs in here for now, but eventually make a class that stores it and has different methods that can use it
+def get_game_data(game_id, gpid, curs, conn):
+	game_data = {}
+
+
+	game_data['game_id'] = game_id
+
+##put get breeds..., get players... etc in their own functions
+	curs.execute("""SELECT breed_name, img FROM squares INNER JOIN dogs ON squares.dog_id = dogs.dog_id WHERE game_id = %s ORDER BY index;""", (game_id,))
+	conn.commit()
+	game_data['squares'] = [{'breed_name': breed_name, 'img': img} for breed_name, img in curs.fetchall()]
+
+
+	curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s ORDER BY gameplayers.join_time;""", (game_id,))
+	conn.commit()
+
+	players = [{'gpid': row[0], 'first_name': row[1], 'img': row[2]} for row in curs.fetchall()]
+	for i in range(len(players)):
+		if players[i]['gpid'] == gpid:
+			players.insert(0, players.pop(i))
+	game_data['players'] = players
+
+
+	curs.execute("""SELECT matches.gameplayer_id, index FROM gameplayers INNER JOIN matches ON gameplayers.gameplayer_id = matches.gameplayer_id WHERE game_id = %s;""", (game_id,))
+	conn.commit()
+	matches = defaultdict(list)
+	for gpid, index in curs.fetchall():
+		matches[gpid].append(index)
+	for player in game_data['players']:
+		player['matches'] = matches[player['gpid']]
+
+
+
+
+	#notifications...
+	game_data['notifications'] = []
+
 
 
 
