@@ -638,7 +638,7 @@ def search_players():
 	curs.execute("""SELECT user_id, first_name, last_name, img FROM users WHERE first_name LIKE %s;""", ('%' + pattern + '%',))
 	curs.commit()
 
-	results = [{'user_id': row[0], 'first_name': row[1], 'last_name': row[2], 'img', row[3]} for row in curs.fetchall()]
+	results = [{'user_id': row[0], 'first_name': row[1], 'last_name': row[2], 'img': row[3]} for row in curs.fetchall()]
 
 	conn.close()
 
