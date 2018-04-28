@@ -489,7 +489,7 @@ def homedata():
 
 		curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s ORDER BY gameplayers.join_time;""", (game_id,))
 		conn.commit()
-		
+
 		players = [{'gpid': row[0], 'first_name': row[1], 'img': row[2]} for row in curs.fetchall()]
 		for i in range(len(players)):
 			if players[i]['gpid'] == my_gpid:
@@ -588,7 +588,7 @@ def newgame():
 	response_data = {}
 	response_data['game_id'] = new_game_id
 	response_data['squares'] = squares
-	response_data['notifications'] = [],
+	response_data['notifications'] = []
 	response_data['players'] = [me]
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
