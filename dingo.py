@@ -661,6 +661,8 @@ def get_game_data(game_id, gpid, curs, conn):
 	#notifications...
 	game_data['notifications'] = []
 
+	return game_data
+
 
 
 
