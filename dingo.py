@@ -456,14 +456,12 @@ def signup():
 
 @app.route("/homedata", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
 def homedata():
-	print(1)
 	if request.method == "OPTIONS":
-		print(2)
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
 		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
 		return response
-		print(3)
+
 	request_data = request.get_json()
 	my_user_id = request_data['user_id']
 
@@ -473,7 +471,7 @@ def homedata():
 	curs.execute("""SELECT gameplayer_id, game_id FROM gameplayers WHERE user_id = %s ORDER BY join_time;""", (my_user_id,))
 	conn.commit()
 	my_games = curs.fetchall()
-	print(4)
+
 	games_data = [get_game_data(game_id, my_gpid, curs, conn) for my_gpid, game_id in my_games]
 
 
@@ -481,7 +479,7 @@ def homedata():
 
 	#get invitations
 	curs.execute("""SELECT invitation_id, first_name FROM invitations INNER JOIN users ON invitations.inviter_id = users.user_id WHERE invitee_id = %s ORDER BY sent_time;""", (my_user_id,))
-	curs.commit()
+	conn.commit()
 
 	invitations = [{'invitation_id': invitation_id, 'inviter_name': first_name} for invitation_id, first_name in curs.fetchall()] 
 
@@ -532,7 +530,7 @@ def newgame():
 		curs.execute("""INSERT INTO squares (game_id, index, dog_id) VALUES (%s, %s, %s);""", (new_game_id, index, dog_id))
 		conn.commit()		
 
-	game_data = get_game_data(new_game_id, my_gpid, curs, conn)
+	game_data = get_game_data(new_game_id, new_gpid, curs, conn)
 
 	conn.close()
 
