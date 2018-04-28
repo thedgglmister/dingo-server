@@ -1,3 +1,4 @@
+from collections import defaultdict
 from flask import Flask, flash, request, session, render_template, redirect, url_for, send_from_directory, jsonify, Response
 from psycopg2 import connect
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -455,28 +456,87 @@ def signup():
 
 @app.route("/homedata", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
 def homedata():
+	print(1)
 	if request.method == "OPTIONS":
+		print(2)
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
 		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
 		return response
-
+		print(3)
 	request_data = request.get_json()
-	my_uid = request_data['user_id']
+	my_user_id = request_data['user_id']
 
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""SELECT gameplayer_id, game_id FROM gameplayers WHERE user_id = %s;""", (my_uid,))
+	curs.execute("""SELECT gameplayer_id, game_id FROM gameplayers WHERE user_id = %s ORDER BY join_time;""", (my_user_id,))
+	conn.commit()
 	my_games = curs.fetchall()
+	print(4)
+	games_data = []
+	for my_gpid, game_id in my_games:
+		game_data = {}
 
-	response_data = {'games': []}  
-	for game in my_games:
-		my_gpid, gid = game
-		curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s AND gameplayers.user_id != %s;""", (gid, my_uid)) #order by joindate?
-		players = [{'gpid': result[0], 'first_name': result[1], 'img': result[2]} for result in curs.fetchall()]
-		game_data = {'game_id': gid, 'my_gpid': my_gpid, 'players': players}
-		response_data['games'].append(game_data)
+
+		game_data['game_id'] = game_id
+
+##put in function...
+		curs.execute("""SELECT squares.dog_id, breed_name, img FROM squares INNER JOIN dogs ON squares.dog_id = dogs.dog_id WHERE game_id = %s ORDER BY index;""", (game_id,))
+		conn.commit()
+		game_data['squares'] = [{'dog_id': dog_id, 'breed_name': breed_name, 'img': img} for dog_id, breed_name, img in curs.fetchall()]
+
+
+		curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s ORDER BY gameplayers.join_time;""", (game_id,))
+		conn.commit()
+		game_data['players'] = []
+		for gpid, first_name, img in curs.fetchall():
+			player_info = {}
+			player_info['gpid'] = gpid
+			player_info['first_name'] = first_name
+			player_info['img'] = img
+			if gpid == my_gpid:
+				game_data['me'] = player_info
+			else:
+				game_data['players'].append(player_info)
+
+
+		curs.execute("""SELECT matches.gameplayer_id, index FROM gameplayers INNER JOIN matches ON gameplayers.gameplayer_id = matches.gameplayer_id WHERE game_id = %s;""", (game_id,))
+		conn.commit()
+		matches = defaultdict(list)
+		for gpid, index in curs.fetchall():
+			matches[gpid].append(index)
+		for player_info in game_data['players']:
+			player_info.matches = matches[player_info['gpid']]
+		game_data['me']['matches'] = matches[game_data['me']['gpid']]
+
+
+
+		#notifications...
+		game_data['notifications'] = []
+
+
+		games_data.append(game_data)
+
+
+
+	#get invitations
+	invitations = []
+
+
+
+	response_data = {}
+	response_data['games'] = games_data
+	response_data['invitations'] = invitations
+
+	##game_data looks like...
+	# {
+	#game_id: 323
+	#squares: [{dog_id:  , breed_name:   , index:    img:   }, {...}, ...]
+	#notifications: [FIGURE THIS OUT!]
+	#players: [{gpid:   ,  first_name:    ,   img:       ,  matches: [] }]
+	#me: {}
+	#} 
 
 	conn.close()
 	response = jsonify(response_data)
@@ -494,20 +554,47 @@ def newgame():
 		return response
 
 	request_data = request.get_json()
-	my_uid = request_data['user_id']
+	my_user_id = request_data['user_id']
 
 	conn = db_connect()
 	curs = conn.cursor()
 
 	curs.execute("""INSERT INTO games (game_id) VALUES (DEFAULT) RETURNING game_id;""")
-	new_gid = curs.fetchone()[0]
-	curs.execute("""INSERT INTO gameplayers (gameplayer_id, game_id, user_id) VALUES (DEFAULT, %s, %s) RETURNING gameplayer_id;""", (new_gid, my_uid))
-	new_gpid = curs.fetchone()[0]
-	#add squares for game!!!
 	conn.commit()
+	new_game_id = curs.fetchone()[0]
+	curs.execute("""INSERT INTO gameplayers (gameplayer_id, game_id, user_id) VALUES (DEFAULT, %s, %s) RETURNING gameplayer_id;""", (new_game_id, my_user_id))
+	conn.commit()
+	new_gpid = curs.fetchone()[0]
+
+
+
+	#add squares for game!!!
+	curs.execute("""SELECT dog_id, breed_name, img FROM dogs;""")
+	conn.commit()
+	all_dogs = curs.fetchall()
+	random.shuffle(all_dogs)
+	squares = [{'index': index, 'dog_id': row[0],'breed_name': row[1], 'img': row[2]} for index, row in enumerate(all_dogs[:25])]
+	for square in squares:
+		curs.execute("""INSERT INTO squares (game_id, index, dog_id) VALUES (%s, %s, %s);""", (new_game_id, square['index'], square['dog_id']))
+		conn.commit()
+
+	curs.execute("""SELECT first_name, img FROM users WHERE user_id = %s;""", (my_user_id,))
+	conn.commit()
+	first_name, img = curs.fetchone()
 	conn.close()
 
-	response_data = {'game_id': new_gid, 'my_gpid': new_gpid, 'players': []}
+	me = {}
+	me['gpid'] = new_gpid
+	me['first_name'] = first_name
+	me['img'] = img
+	me['matches'] = []
+
+	response_data = {}
+	response_data['game_id'] = new_game_id
+	response_data['squares'] = squares
+	response_data['notifications'] = [],
+	response_data['players'] = []
+	response_data['me'] = me
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
