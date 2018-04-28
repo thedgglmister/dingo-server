@@ -416,7 +416,7 @@ def validate_breed(): ## give infer image without saving?
 
 
 
-@app.route("/signup", methods=["POST", "OPTIONS"])   
+@app.route("/signup", methods=["POST", "OPTIONS"])   #need to only put in lowercase data..
 def signup():
 	if request.method == "OPTIONS":
 		response = Response()
@@ -581,9 +581,7 @@ def accept_invite():
 
 	curs.execute("""DELETE FROM invitations WHERE invitation_id = %s RETURNING game_id, invitee_id;""", (invitation_id,)) #delete all inviations to that
 	conn.commit()
-	deleted_data = curs.fetchone()
-	print(deleted_data)
-	game_id, user_id = deleted_data
+	game_id, user_id = curs.fetchone()
 
 	curs.execute("""INSERT INTO gameplayers (game_id, user_id) VALUES (%s, %s) RETURNING gameplayer_id;""", (game_id, user_id))
 	conn.commit()
@@ -620,6 +618,36 @@ def delete_invite():
 	response = Response()
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
+
+
+
+@app.route("/search_players", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def search_players():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	pattern = request_data['pattern']
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""SELECT user_id, first_name, last_name, img FROM users WHERE first_name LIKE %s;""", ('%' + pattern + '%',))
+	curs.commit()
+
+	results = [{'user_id': row[0], 'first_name': row[1], 'last_name': row[2], 'img', row[3]} for row in curs.fetchall()]
+
+	conn.close()
+
+	response = jsonify(results)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
 
 
 
