@@ -489,16 +489,11 @@ def homedata():
 
 		curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s ORDER BY gameplayers.join_time;""", (game_id,))
 		conn.commit()
-		game_data['players'] = []
-		for gpid, first_name, img in curs.fetchall():
-			player_info = {}
-			player_info['gpid'] = gpid
-			player_info['first_name'] = first_name
-			player_info['img'] = img
-			if gpid == my_gpid:
-				game_data['me'] = player_info
-			else:
-				game_data['players'].append(player_info)
+		players = [{'gpid': row[0], 'first_name': row[1], 'img': row[2]} for row in curs.fetchall()]
+		for i in range(len(players)):
+			if players[i].gpid == my_gpid:
+				players.insert(0, players.pop(i))
+		game_data['players'] = players
 
 
 		curs.execute("""SELECT matches.gameplayer_id, index FROM gameplayers INNER JOIN matches ON gameplayers.gameplayer_id = matches.gameplayer_id WHERE game_id = %s;""", (game_id,))
@@ -506,9 +501,9 @@ def homedata():
 		matches = defaultdict(list)
 		for gpid, index in curs.fetchall():
 			matches[gpid].append(index)
-		for player_info in game_data['players']:
-			player_info.matches = matches[player_info['gpid']]
-		game_data['me']['matches'] = matches[game_data['me']['gpid']]
+		for player in game_data['players']:
+			player.matches = matches[player['gpid']]
+
 
 
 
@@ -593,8 +588,7 @@ def newgame():
 	response_data['game_id'] = new_game_id
 	response_data['squares'] = squares
 	response_data['notifications'] = [],
-	response_data['players'] = []
-	response_data['me'] = me
+	response_data['players'] = [me]
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
