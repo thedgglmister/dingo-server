@@ -489,9 +489,10 @@ def homedata():
 
 		curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s ORDER BY gameplayers.join_time;""", (game_id,))
 		conn.commit()
+		
 		players = [{'gpid': row[0], 'first_name': row[1], 'img': row[2]} for row in curs.fetchall()]
 		for i in range(len(players)):
-			if players[i].gpid == my_gpid:
+			if players[i]['gpid'] == my_gpid:
 				players.insert(0, players.pop(i))
 		game_data['players'] = players
 
@@ -502,7 +503,7 @@ def homedata():
 		for gpid, index in curs.fetchall():
 			matches[gpid].append(index)
 		for player in game_data['players']:
-			player.matches = matches[player['gpid']]
+			player['matches'] = matches[player['gpid']]
 
 
 
