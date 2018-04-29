@@ -443,7 +443,7 @@ def signup():
 		response_data['success'] = False
 		response_data['error_msg'] = "Email Address {} already exists".format(email)
 	else:
-		curs.execute("""INSERT INTO users (first_name, last_name, password, email) VALUES (%s, %s, %s, %s) RETURNING user_id;""", (first_name, last_name, generate_password_hash(pw), email))
+		curs.execute("""INSERT INTO users (first_name, last_name, password, email) VALUES (LOWER(%s), LOWER(%s), %s, LOWER(%s)) RETURNING user_id;""", (first_name, last_name, generate_password_hash(pw), email))
 		conn.commit()
 		new_user_id = curs.fetchone()[0]
 		response_data['success'] = True
