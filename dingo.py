@@ -19,6 +19,8 @@ from flask_cors import CORS ##need this? uninstall? deal with preflighting manua
 ##if a server error happens(4xx,5xx), does it include cors headers to get that back to client? or will it get a cors error? i think flask_cors fixes this..?
 ## RETURNING in SQL only for postgresql...
 
+##every so often, check if there are games that no one is in, then delete squares, notifications or matches to gameplayer_ids that arent in game, delete those
+
 app = Flask(__name__)
 #CORS(app)
 app.secret_key = urandom(24)
@@ -647,6 +649,29 @@ def search_players():
 	return response
 
 
+@app.route("/leave_game", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def leave_game():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	gpid = request_data['gpid']
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""UPDATE gameplayers SET in_game = FALSE WHERE gameplayer_id = %s;""", (gpid,))
+	conn.commit()
+
+	conn.close()
+
+	response = Response()
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
 
 
 
@@ -667,7 +692,7 @@ def get_game_data(game_id, gpid, curs, conn):
 	game_data['squares'] = [{'breed_name': breed_name, 'img': img} for breed_name, img in curs.fetchall()]
 
 
-	curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s ORDER BY gameplayers.join_time;""", (game_id,))
+	curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s AND in_game = TRUE ORDER BY gameplayers.join_time;""", (game_id,))
 	conn.commit()
 
 	players = [{'gpid': row[0], 'first_name': row[1], 'img': row[2]} for row in curs.fetchall()]
