@@ -455,7 +455,7 @@ def signup():
 
 
 @app.route("/login", methods=["POST", "OPTIONS"])   
-def signup():
+def login():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
