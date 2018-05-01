@@ -645,8 +645,7 @@ def get_top_players():
 	conn.commit()
 
 	top_players = [{'user_id': row[0], 'first_name': row[1], 'last_name': row[2], 'img': row[3]} for row in curs.fetchall()]
-	print(top_players)
-	
+
 	conn.close()
 
 	response = jsonify(top_players)
@@ -664,12 +663,14 @@ def search_players():
 		return response
 
 	request_data = request.get_json()
-	pattern = request_data['pattern']
+	patterns = request_data['pattern'].strip().split()
+	first_pattern = patterns[0]
+	last_pattern = len(patterns > 1) ? patterns[1] : ''
 	
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""SELECT user_id, first_name, last_name, img FROM users WHERE first_name LIKE %s;""", ('%' + pattern + '%',))
+	curs.execute("""SELECT user_id, first_name, last_name, img FROM users WHERE (first_name LIKE %s AND last_name LIKE %s) OR (first_name LIKE %s AND last_name LIKE %s) LIMIT 30;""", (first_pattern + '%', last_pattern + '%', last_pattern + '%', first_pattern + '%'))
 	conn.commit()
 
 	results = [{'user_id': row[0], 'first_name': row[1], 'last_name': row[2], 'img': row[3]} for row in curs.fetchall()]
