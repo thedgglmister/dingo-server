@@ -410,7 +410,7 @@ def validate_breed(): ## give infer image without saving?
 			response['match'] = True
 
 
-	if response['match'] = True:
+	if response['match'] == True:
 		conn = db_connect()
 		curs = conn.cursor()
 
