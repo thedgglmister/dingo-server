@@ -15,7 +15,7 @@ from flask_cors import CORS ##need this? uninstall? deal with preflighting manua
 
 ###everything needs to get redirected if not logged in etc.
 ### 	response.headers['Access-Control-Allow-Origin'] = '*'   look into these... (put origin: [app domain] in request then replace * with [app domain])
-## is preflighting slow? can i get around this?
+## is preflighting slow? can i get around this? put stuff in forms and submit it from form?
 ##if a server error happens(4xx,5xx), does it include cors headers to get that back to client? or will it get a cors error? i think flask_cors fixes this..?
 ## RETURNING in SQL only for postgresql...
 
@@ -28,7 +28,7 @@ app.secret_key = urandom(24)
 
 BREEDS = ["Golden Retriever", "English Setter", "Beagle", "Weimaraner"]
 CARD_SIZE = 4
-PASSING_PROB = 0.8 ## calibrate after getting rid of a bunch, especially those that cause easy confusion. find 10 high quality pictures and uplaod them and see if theres confusion. then try medium quality low quality. see what needs to happen, right now its too tight. perfect beagle gets .95 english foxhound. or instead of checking agianst a passing_prob, check that its in top 3. this might work well if its tight, but not well if there are less breeds? cus if a dog looks like no other dog, un-lookalike ones will get in top 3? #also, need to prevent random shots, or drawings? try cartoonish drawings like something that is just a crude outline and black spots. but prevent those from getting one. so if top 3 re all .3, .2, .2, then no. so it has to be in top 3 and about .3? or something. just test every breed. #with top 3 youll easily be able to fool. anything that looks like a beagle can pass. a bassett hound? try this(update: maybe its fine...).
+PASSING_PROB = 0.2 ## calibrate after getting rid of a bunch, especially those that cause easy confusion. find 10 high quality pictures and uplaod them and see if theres confusion. then try medium quality low quality. see what needs to happen, right now its too tight. perfect beagle gets .95 english foxhound. or instead of checking agianst a passing_prob, check that its in top 3. this might work well if its tight, but not well if there are less breeds? cus if a dog looks like no other dog, un-lookalike ones will get in top 3? #also, need to prevent random shots, or drawings? try cartoonish drawings like something that is just a crude outline and black spots. but prevent those from getting one. so if top 3 re all .3, .2, .2, then no. so it has to be in top 3 and about .3? or something. just test every breed. #with top 3 youll easily be able to fool. anything that looks like a beagle can pass. a bassett hound? try this(update: maybe its fine...).
 
 
 
@@ -389,6 +389,10 @@ def handle_request(requester, confirm):
 def validate_breed(): ## give infer image without saving?
 	raw_file = request.files['file'].read()
 	submit_breed = request.form['breedName'].lower().replace(' ', '_') #or data?
+	index = request.form['index']
+	gpid = request.form['gpid']
+
+
 	probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
 	top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
 	for i in range(3):####
@@ -397,6 +401,12 @@ def validate_breed(): ## give infer image without saving?
 	for i in range(3):
 		if top3[i][0] == submit_breed and top3[i][1] > PASSING_PROB:
 			response['match'] = True
+
+
+
+
+
+
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
