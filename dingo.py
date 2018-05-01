@@ -367,6 +367,7 @@ def handle_request(requester, confirm):
 
 
 
+#####REACT######
 
 
 
@@ -384,13 +385,19 @@ def handle_request(requester, confirm):
 
 
 
-
-@app.route("/validate_breed", methods=["POST"]) ###use ajax... ?huh? //need to update backend database and push to everyone else... 
+@app.route("/validate_breed", methods=["POST", "OPTIONS"]) ###use ajax... ?huh? //need to update backend database and push to everyone else... 
 def validate_breed(): ## give infer image without saving?
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
 	raw_file = request.files['file'].read()
-	submit_breed = request.form['breedName'].lower().replace(' ', '_') #or data?
-	index = request.form['index']
-	gpid = request.form['gpid']
+	request_data = request.form
+	submit_breed = request_data['breedName'].lower().replace(' ', '_') #or data?
+	index = request_data['index']
+	gpid = request_data['gpid']
 
 
 	probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
@@ -403,28 +410,24 @@ def validate_breed(): ## give infer image without saving?
 			response['match'] = True
 
 
+	if response['match'] = True:
+		conn = db_connect()
+		curs = conn.cursor()
 
-
-
+		curs.execute("INSERT INTO matches (gpid, index) VALUES (%s, %s);""", (gpid, index))
+		conn.commit()
+		conn.close()
 
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
-#		if guess_breed == submit_breed and guess_prob > PASSING_PROB:
-#			slot = request.form['slot']
-#			conn = db_connect()
-#			c = conn.cursor()
-#			c.execute("UPDATE cards SET checked=TRUE WHERE username = %s AND game_name = %s AND slot = %s", (username, game_name, slot))
-#			conn.commit()
-#			conn.close()
-		#check if theres a bingo here, or on redirect to game?
-#		else:
-#			pass #let them know it failed...
-#		return redirect(url_for("game", username=username, game_name=game_name))
+
+#check if theres a bingo here, or on redirect to game?
 
 
 
-#####REACT######
+
+
 
 
 
