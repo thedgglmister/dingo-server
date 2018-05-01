@@ -623,6 +623,38 @@ def delete_invite():
 
 
 
+
+
+
+
+@app.route("/get_top_players", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def get_top_players():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	user_id = request_data['user_id']
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""SELECT users.user_id, users.first_name, users.last_name, users.img FROM gameplayers AS gp1 INNER JOIN gameplayers AS gp2 ON gp1.game_id = gp2.game_id INNER JOIN users ON gp2.user_id = users.user_id WHERE gp1.user_id = %s AND gp2.user_id != %s GROUP BY users.user_id, users.first_name, users.last_name, users.img ORDER BY COUNT(users.user_id);""", (user_id, user_id))
+	conn.commit()
+
+	top_players = [{'user_id': row[0], 'first_name': row[1], 'last_name': row[2], 'img': row[3]} for row in curs.fetchall()]
+	print(top_players)
+	
+	conn.close()
+
+	response = jsonify(top_players)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
 @app.route("/search_players", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
 def search_players():
 	if request.method == "OPTIONS":
