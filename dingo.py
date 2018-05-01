@@ -665,7 +665,7 @@ def search_players():
 	request_data = request.get_json()
 	patterns = request_data['pattern'].strip().split()
 	first_pattern = patterns[0]
-	last_pattern = len(patterns > 1) ? patterns[1] : ''
+	last_pattern = len(patterns) > 1 ? patterns[1] : ''
 	
 	conn = db_connect()
 	curs = conn.cursor()
