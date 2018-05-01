@@ -125,15 +125,15 @@ def email_availability():
 # 			return render_template("login.html")
 
 
-@app.route("/login", methods=["POST"])   ###NEW######
-def login():
-	username = request.form.get("username")
-	pw = request.form.get("password")
-	error_msg = validate_user(username, pw)
-	if error_msg == None:
-		return 'success'
-	else:
-		return error_msg
+#@app.route("/login", methods=["POST"])   ###NEW######
+#def login():
+#	username = request.form.get("username")
+#	pw = request.form.get("password")
+#	error_msg = validate_user(username, pw)
+#	if error_msg == None:
+#		return 'success'
+#	else:
+#		return error_msg
 
 
 
@@ -432,14 +432,12 @@ def signup():
 	last_name = request_data.get('lastName')
 	pw = request_data.get("password")
 
-	if email == "error":  #####
-		return Response(status=401, headers={'Access-Control-Allow-Origin': '*'}) ####
-
 	conn = db_connect()
 	curs = conn.cursor()
 
 	#check if email already exist
 	curs.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
+	conn.commit()
 	response_data = {}
 	if curs.rowcount > 0:
 		response_data['success'] = False
@@ -454,6 +452,43 @@ def signup():
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
+
+
+@app.route("/login", methods=["POST", "OPTIONS"])   
+def signup():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	email = request_data.get('emailAddress')
+	pw = request_data.get("password")
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""SELECT email, password FROM users WHERE email = %s;""", (email,))
+	conn.commit()
+
+	if curs.rowcount == 0:
+		response_data['success'] = False
+		response_data['error_msg'] = "Email Address {} does not exist".format(email)
+	else if not check_password_hash(curs.fetchone()[1], pw):
+		response_data['success'] = False
+		response_data['error_msg'] = "Incorrect password"
+	else:
+		response_data['success'] = True
+
+	conn.close()
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
+
 
 
 @app.route("/homedata", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
