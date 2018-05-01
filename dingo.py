@@ -475,7 +475,7 @@ def signup():
 	if curs.rowcount == 0:
 		response_data['success'] = False
 		response_data['error_msg'] = "Email Address {} does not exist".format(email)
-	else if not check_password_hash(curs.fetchone()[1], pw):
+	elif not check_password_hash(curs.fetchone()[1], pw):
 		response_data['success'] = False
 		response_data['error_msg'] = "Incorrect password"
 	else:
