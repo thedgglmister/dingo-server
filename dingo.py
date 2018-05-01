@@ -469,18 +469,19 @@ def login():
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""SELECT email, password FROM users WHERE email = %s;""", (email,))
+	curs.execute("""SELECT email, password, user_id FROM users WHERE email = %s;""", (email,))
 	conn.commit()
-
+	email, hashed_pw, user_id = curs.fetchone();
 	response_data = {}
 	if curs.rowcount == 0:
 		response_data['success'] = False
 		response_data['error_msg'] = "Email Address {} does not exist".format(email)
-	elif not check_password_hash(curs.fetchone()[1], pw):
+	elif not check_password_hash(hashed_pw, pw):
 		response_data['success'] = False
 		response_data['error_msg'] = "Incorrect password"
 	else:
 		response_data['success'] = True
+		response_data['user_id'] = user_id
 
 	conn.close()
 	response = jsonify(response_data)
