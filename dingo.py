@@ -641,6 +641,9 @@ def accept_invite():
 
 	game_data = get_game_data(game_id, new_gpid, curs, conn)
 
+	curs.execute("""INSERT INTO notifications (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND user_id != %s;""", (user_id, 'join', game_id, user_id))
+	conn.commit()
+
 	conn.close()
 
 	response = jsonify(game_data)
