@@ -800,7 +800,11 @@ def get_game_data(game_id, gpid, curs, conn):
 
 
 	#notifications...
-	game_data['notifications'] = []
+	curs.execute("""SELECT notification_id, first_name, type FROM notifications INNER JOIN users ON notifications.notifier_id = users.user_id WHERE gameplayer_id = %s ORDER BY sent_time;""", (gpid,))
+	conn.commit()
+
+
+	game_data['notifications'] = curs.fetchall() ####
 
 	return game_data
 
