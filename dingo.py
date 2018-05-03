@@ -817,7 +817,9 @@ def get_game_data(game_id, gpid, curs, conn):
 
 
 
-def format_notifications(name, type):
+def format_notifications(notification):
+	type = notification[2]
+	name = notification[1]
 	if type == 'join':
 		return "{} has joined the game".format(name)
 	elif type == 'leave':
