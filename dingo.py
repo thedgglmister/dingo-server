@@ -416,6 +416,10 @@ def validate_breed(): ## give infer image without saving?
 
 		curs.execute("INSERT INTO matches (gpid, index) VALUES (%s, %s);""", (gpid, index))
 		conn.commit()
+
+		curs.execute("""INSERT INTO notifications (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND user_id != %s;""", (user_id, request_data['breedName'], game_id, user_id))
+		conn.commit()
+
 		conn.close()
 
 	response = jsonify(response_data)
@@ -752,8 +756,12 @@ def leave_game():
 	curs.execute("""UPDATE gameplayers SET in_game = FALSE WHERE gameplayer_id = %s;""", (gpid,))
 	conn.commit()
 
-	conn.close()
+	curs.execute("""INSERT INTO notifications (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND user_id != %s;""", (user_id, 'leave', game_id, user_id))
+	conn.commit()
 
+	conn.close()
+	curs.execute("""INSERT INTO notifications (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND user_id != %s;""", (user_id, 'join', game_id, user_id))
+	conn.commit()
 	response = Response()
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
