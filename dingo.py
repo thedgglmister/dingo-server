@@ -811,10 +811,21 @@ def get_game_data(game_id, gpid, curs, conn):
 	curs.execute("""SELECT notification_id, first_name, type FROM notifications INNER JOIN users ON notifications.notifier_id = users.user_id WHERE gameplayer_id = %s ORDER BY sent_time;""", (gpid,))
 	conn.commit()
 
+	game_data['notifications'] = list(map(format_notifications, curs.fetchall())) ##
 
-	game_data['notifications'] = curs.fetchall() ####
+	conn.close()
 
 	return game_data
+
+
+
+def format_notifications(name, type):
+	if type == 'join':
+		return "{} has joined the game".format(name)
+	elif type == 'leave':
+		return "{} has left the game".format(name)
+	else:
+		return "{} has found a {}".format(name, type)
 
 
 
