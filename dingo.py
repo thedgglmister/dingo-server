@@ -419,8 +419,8 @@ def validate_breed(): ## give infer image without saving?
 		curs.execute("INSERT INTO matches (gameplayer_id, index) VALUES (%s, %s);""", (gpid, index))
 		conn.commit()
 
-		curs.execute("""INSERT INTO notifications (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND user_id != %s;""", (user_id, request_data['breedName'], game_id, user_id))
-		conn.commit()
+	#	curs.execute("""INSERT INTO notifications (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND user_id != %s;""", (user_id, request_data['breedName'], game_id, user_id))
+	#	conn.commit()
 
 		conn.close()
 
