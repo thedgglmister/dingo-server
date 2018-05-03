@@ -407,9 +407,9 @@ def validate_breed(): ## give infer image without saving?
 	response_data = {'match': False}
 	for i in range(3):
 		if top3[i][0] == submit_breed and top3[i][1] > PASSING_PROB:
-			response['match'] = True
+			response_data['match'] = True
 
-	response['match'] = True	 #####tempppppp for testing!!!
+	response_data['match'] = True	 #####tempppppp for testing!!!
 
 
 	if response_data['match'] == True:
