@@ -818,14 +818,17 @@ def get_game_data(game_id, gpid, curs, conn):
 
 
 def format_notifications(notification):
-	type = notification[2]
+	result = {}
+	result['notification_id'] = notification[0]
 	name = notification[1]
+	type = notification[2]
 	if type == 'join':
-		return "{} has joined the game".format(name)
+		result['msg'] = "{} has joined the game".format(name)
 	elif type == 'leave':
-		return "{} has left the game".format(name)
+		result['msg'] = "{} has left the game".format(name)
 	else:
-		return "{} has found a {}".format(name, type)
+		result['msg'] = "{} has found a {}".format(name, type)
+	return result
 
 
 
