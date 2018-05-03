@@ -813,8 +813,6 @@ def get_game_data(game_id, gpid, curs, conn):
 
 	game_data['notifications'] = list(map(format_notifications, curs.fetchall())) ##
 
-	conn.close()
-
 	return game_data
 
 
