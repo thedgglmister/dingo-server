@@ -409,6 +409,8 @@ def validate_breed(): ## give infer image without saving?
 		if top3[i][0] == submit_breed and top3[i][1] > PASSING_PROB:
 			response['match'] = True
 
+	response['match'] = True	 #####tempppppp for testing!!!
+
 
 	if response_data['match'] == True:
 		conn = db_connect()
