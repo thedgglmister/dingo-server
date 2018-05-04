@@ -771,6 +771,30 @@ def leave_game():
 
 
 
+@app.route("/read_notifications", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def read_notifications():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	notification_ids = request_data['read_notifications']
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	for id in notification_ids:
+		curs.execute("""UPDATE notifications SET read = TRUE WHERE notification_id = %s;""", (id,))
+		conn.commit()
+
+	conn.close()
+
+	response = Response()
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
 
 
 
