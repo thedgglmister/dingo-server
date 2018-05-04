@@ -526,7 +526,7 @@ def homedata():
 
 	conn = db_connect()
 	curs = conn.cursor()
-
+	print("###" + my_user_id)
 	curs.execute("""SELECT gameplayer_id, game_id FROM gameplayers WHERE user_id = %s AND in_game = TRUE ORDER BY join_time;""", (my_user_id,))
 	conn.commit()
 	my_games = curs.fetchall()
