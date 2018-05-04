@@ -815,7 +815,7 @@ def get_game_data(game_id, gpid, curs, conn):
 	game_data['notifications'] = list(map(format_notifications, curs.fetchall())) ##
 
 	return game_data
-	    
+
 
 def format_notifications(row):
 	notification = {}
@@ -827,11 +827,11 @@ def format_notifications(row):
 	notification['notifier'] = notifier
 	type = row[4]
 	if type == 'join':
-		notification['msg'] = "{} has joined the game".format(name)
+		notification['msg'] = "{} has joined the game".format(row[2])
 	elif type == 'leave':
-		notification['msg'] = "{} has left the game".format(name)
+		notification['msg'] = "{} has left the game".format(row[2])
 	else:
-		notification['msg'] = "{} has found a {}".format(name, type)
+		notification['msg'] = "{} has found a {}".format(row[2], type)
 	return notification
 
 
