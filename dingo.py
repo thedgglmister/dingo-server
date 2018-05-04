@@ -803,8 +803,8 @@ def get_game_data(game_id, gpid, curs, conn):
 	curs.execute("""SELECT matches.gameplayer_id, index FROM gameplayers INNER JOIN matches ON gameplayers.gameplayer_id = matches.gameplayer_id WHERE game_id = %s;""", (game_id,))
 	conn.commit()
 	matches = defaultdict(list)
-	for gpid, index in curs.fetchall():
-		matches[gpid].append(index)
+	for gp_id, index in curs.fetchall():
+		matches[gp_id].append(index)
 	for player in game_data['players']:
 		player['matches'] = matches[player['gpid']]
 
