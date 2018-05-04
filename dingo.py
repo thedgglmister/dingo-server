@@ -779,26 +779,27 @@ def leave_game():
 ##gets game data for game id, if gpid is present than its a game im in, other wise not. assume it is there for now... curs in here for now, but eventually make a class that stores it and has different methods that can use it
 def get_game_data(game_id, gpid, curs, conn):
 	game_data = {}
+	print(gpid)
 
 
 	game_data['game_id'] = game_id
-
+	print(gpid)
 ##put get breeds..., get players... etc in their own functions
 	curs.execute("""SELECT breed_name, img FROM squares INNER JOIN dogs ON squares.dog_id = dogs.dog_id WHERE game_id = %s ORDER BY index;""", (game_id,))
 	conn.commit()
 	game_data['squares'] = [{'breed_name': breed_name, 'img': img} for breed_name, img in curs.fetchall()]
-
+	print(gpid)
 
 	curs.execute("""SELECT gameplayer_id, first_name, img FROM gameplayers INNER JOIN users ON gameplayers.user_id = users.user_id WHERE game_id = %s AND in_game = TRUE ORDER BY gameplayers.join_time;""", (game_id,))
 	conn.commit()
-
+	print(gpid)
 	players = [{'gpid': row[0], 'first_name': row[1], 'img': row[2]} for row in curs.fetchall()]
 	for i in range(len(players)):
 		if players[i]['gpid'] == gpid:
 			players.insert(0, players.pop(i))
 	game_data['players'] = players
 
-
+	print(gpid)
 	curs.execute("""SELECT matches.gameplayer_id, index FROM gameplayers INNER JOIN matches ON gameplayers.gameplayer_id = matches.gameplayer_id WHERE game_id = %s;""", (game_id,))
 	conn.commit()
 	matches = defaultdict(list)
@@ -807,7 +808,7 @@ def get_game_data(game_id, gpid, curs, conn):
 	for player in game_data['players']:
 		player['matches'] = matches[player['gpid']]
 
-
+	print(gpid)
 
 
 	#notifications...
