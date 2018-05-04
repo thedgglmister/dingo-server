@@ -813,7 +813,7 @@ def get_game_data(game_id, gpid, curs, conn):
 
 	#notifications...
 	print(gpid)
-	curs.execute("""SELECT notification_id, notifier_id, first_name, img, type FROM notifications INNER JOIN gameplayers ON notifications.notifier_id = gameplayers.gameplayer_id  INNER JOIN users ON gameplayers.user_id = users.user_id WHERE notifications.gameplayer_id = %s ORDER BY sent_time;""", (gpid,))
+	curs.execute("""SELECT notification_id, notifier_id, first_name, img, type, read FROM notifications INNER JOIN gameplayers ON notifications.notifier_id = gameplayers.gameplayer_id  INNER JOIN users ON gameplayers.user_id = users.user_id WHERE notifications.gameplayer_id = %s ORDER BY sent_time;""", (gpid,))
 	conn.commit()
 
 	game_data['notifications'] = list(map(format_notifications, curs.fetchall())) ##
@@ -824,6 +824,7 @@ def get_game_data(game_id, gpid, curs, conn):
 def format_notifications(row):
 	notification = {}
 	notification['notification_id'] = row[0]
+	notification['read'] = row[5]
 	notifier = {}
 	notifier['gpid'] = row[1]
 	notifier['first_name'] = row[2]
