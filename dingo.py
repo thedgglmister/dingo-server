@@ -809,27 +809,30 @@ def get_game_data(game_id, gpid, curs, conn):
 
 
 	#notifications...
-	curs.execute("""SELECT notification_id, first_name, type FROM notifications INNER JOIN users ON notifications.notifier_id = users.user_id WHERE gameplayer_id = %s ORDER BY sent_time;""", (gpid,))
+	curs.execute("""SELECT notification_id, notifier_id, first_name, img, type FROM notifications INNER JOIN users ON notifications.notifier_id = users.user_id WHERE gameplayer_id = %s ORDER BY sent_time;""", (gpid,))
 	conn.commit()
 
 	game_data['notifications'] = list(map(format_notifications, curs.fetchall())) ##
 
 	return game_data
+	    
 
-
-
-def format_notifications(notification):
-	result = {}
-	result['notification_id'] = notification[0]
-	name = notification[1]
-	type = notification[2]
+def format_notifications(row):
+	notification = {}
+	notification['notification_id'] = row[0]
+	notifier = {}
+	notifier['gpid'] = row[1]
+	notifier['first_name'] = row[2]
+	notifier['img'] = row[3]
+	notification['notifier'] = notifier
+	type = row[4]
 	if type == 'join':
-		result['msg'] = "{} has joined the game".format(name)
+		notification['msg'] = "{} has joined the game".format(name)
 	elif type == 'leave':
-		result['msg'] = "{} has left the game".format(name)
+		notification['msg'] = "{} has left the game".format(name)
 	else:
-		result['msg'] = "{} has found a {}".format(name, type)
-	return result
+		notification['msg'] = "{} has found a {}".format(name, type)
+	return notification
 
 
 
