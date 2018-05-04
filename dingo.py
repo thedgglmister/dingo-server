@@ -398,6 +398,7 @@ def validate_breed(): ## give infer image without saving?
 	submit_breed = request_data['breedName'].lower().replace(' ', '_') #or data?
 	index = request_data['index']
 	gpid = request_data['gpid']
+	game_id = request_data['game_id']
 
 
 	probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
@@ -751,6 +752,7 @@ def leave_game():
 
 	request_data = request.get_json()
 	gpid = request_data['gpid']
+	game_id = request_data['game_id']
 	
 	conn = db_connect()
 	curs = conn.cursor()
