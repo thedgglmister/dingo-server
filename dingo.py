@@ -394,6 +394,8 @@ def validate_breed(): ## give infer image without saving?
 		return response
 
 	raw_file = request.files['file'].read()
+	print("$$$" + raw_file)
+	print(type(raw_file))
 	request_data = request.form
 	submit_breed = request_data['breedName'].lower().replace(' ', '_') #or data?
 	index = request_data['index']
