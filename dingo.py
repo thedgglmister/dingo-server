@@ -827,6 +827,7 @@ def update_profile():
 	response_data = {}
 
 	if email:
+		print(email)
 		curs.execute("""SELECT email from users WHERE email=%s;""", (email,))
 		conn.commit()
 		if curs.rowcount > 0:
@@ -836,12 +837,15 @@ def update_profile():
 			conn.commit()
 
 	if first_name and not response_data.get('error_msg'):
+		print(first_name)
 		curs.execute("""UPDATE users SET first_name = %s WHERE user_id = %s;""", (first_name, user_id))
 		conn.commit()
 	if last_name and not response_data.get('error_msg'):
+		print(last_name)
 		curs.execute("""UPDATE users SET last_name = %s WHERE user_id = %s;""", (last_name, user_id))
 		conn.commit()
 	if img and not response_data.get('error_msg'):
+		print(img)
 		curs.execute("""UPDATE users SET img = %s WHERE user_id = %s;""", (img, user_id))
 		conn.commit()
 
