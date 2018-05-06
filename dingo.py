@@ -528,7 +528,13 @@ def homedata():
 
 	conn = db_connect()
 	curs = conn.cursor()
-	print("###" + str(my_user_id))
+
+	curs.execute("""SELECT first_name, last_name, email, img FROM users WHERE user_id = %s;""", (my_user_id,))
+	conn.commit()
+	my_data = curs.fetchone()
+
+	my_profile = {'first_name': my_data[0], 'last_name': my_data[1], 'email': my_data[2], 'img': my_data[3]}
+
 	curs.execute("""SELECT gameplayer_id, game_id FROM gameplayers WHERE user_id = %s AND in_game = TRUE ORDER BY join_time;""", (my_user_id,))
 	conn.commit()
 	my_games = curs.fetchall()
@@ -547,6 +553,7 @@ def homedata():
 
 
 	response_data = {}
+	response_data['my_profile'] = my_profile
 	response_data['games'] = games_data
 	response_data['invitations'] = invitations
 
