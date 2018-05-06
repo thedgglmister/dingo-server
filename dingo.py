@@ -806,6 +806,50 @@ def read_notifications():
 
 
 
+@app.route("/update_profile", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def read_notifications():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	first_name = request_data.get('first_name')
+	last_name = request_data.get('last_name')
+	email = request_data.get('email')
+	img = request_data.get('img')
+	user_id = request_data.get("user_id")
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	response_data = {}
+
+	if email:
+		curs.execute("""SELECT email from users WHERE email=%s;""" (email,))
+		conn.commit()
+		if curs.rowcount > 0:
+			response_data['error_msg'] = "Email Address {} has already been used".format(email)
+		else:
+			curs.execute("""UPDATE users SET email = %s WHERE user_id = %s;""" (email, user_id))
+			conn.commit()
+
+	if first_name and not response_data.get('error_msg'):
+		curs.execute("""UPDATE users SET first_name = %s WHERE user_id = %s;""" (first_name, user_id))
+		conn.commit()
+	if last_name and not response_data.get('error_msg'):
+		curs.execute("""UPDATE users SET last_name = %s WHERE user_id = %s;""" (last_name, user_id))
+		conn.commit()
+	if img and not response_data.get('error_msg'):
+		curs.execute("""UPDATE users SET img = %s WHERE user_id = %s;""" (img, user_id))
+		conn.commit()
+
+	conn.close()
+
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
 
 
 
