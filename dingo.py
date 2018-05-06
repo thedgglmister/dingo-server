@@ -553,7 +553,7 @@ def homedata():
 
 
 	response_data = {}
-	response_data['my_profile'] = my_profile
+	response_data['myProfile'] = my_profile
 	response_data['games'] = games_data
 	response_data['invitations'] = invitations
 
