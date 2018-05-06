@@ -807,7 +807,7 @@ def read_notifications():
 
 
 @app.route("/update_profile", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def read_notifications():
+def update_profile():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
