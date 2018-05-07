@@ -803,7 +803,6 @@ def email_availability():
 
 	curs.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
 	conn.commit()
-	response_data = {}
 	if curs.rowcount > 0:
 		response_data['email_available'] = False
 
