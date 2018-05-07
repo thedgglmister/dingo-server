@@ -433,23 +433,24 @@ def signup():
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
 		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		print(0)
 		return response
-
+	print(1)
 	request_data = request.get_json()
 	email = request_data.get('emailAddress')
 	first_name = request_data.get('firstName')
 	last_name = request_data.get('lastName')
 	pw = request_data.get("password")
 	img = request_data.get("img")
-
+	print(2)
 	conn = db_connect()
 	curs = conn.cursor()
-
+	print(3)
 	curs.execute("""INSERT INTO users (first_name, last_name, password, email, img) VALUES (LOWER(%s), LOWER(%s), %s, LOWER(%s), %s) RETURNING user_id;""", (first_name, last_name, generate_password_hash(pw), email, img))
 	conn.commit()
 	new_user_id = curs.fetchone()[0]
 	response_data['user_id'] = new_user_id
-
+	print(4)
 	conn.close()
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
