@@ -84,19 +84,6 @@ def username_availability():
 	else:
 		return "success"
 
-@app.route("/email_availability", methods=["POST"])
-def email_availability():
-	conn = db_connect()
-	c = conn.cursor()
-	email = request.form.get("email")
-	c.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
-	match = c.fetchone()
-	conn.close()
-	if match:
-		return "email_error"
-	else:
-		return "success"
-
 
 
 
@@ -453,23 +440,16 @@ def signup():
 	first_name = request_data.get('firstName')
 	last_name = request_data.get('lastName')
 	pw = request_data.get("password")
+	img = request_data.get("img")
 
 	conn = db_connect()
 	curs = conn.cursor()
 
-	#check if email already exist
-	curs.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
+	curs.execute("""INSERT INTO users (first_name, last_name, password, email, img) VALUES (LOWER(%s), LOWER(%s), %s, LOWER(%s), %s) RETURNING user_id;""", (first_name, last_name, generate_password_hash(pw), email, img))
 	conn.commit()
-	response_data = {}
-	if curs.rowcount > 0:
-		response_data['success'] = False
-		response_data['error_msg'] = "Email Address {} already exists".format(email)
-	else:
-		curs.execute("""INSERT INTO users (first_name, last_name, password, email) VALUES (LOWER(%s), LOWER(%s), %s, LOWER(%s)) RETURNING user_id;""", (first_name, last_name, generate_password_hash(pw), email))
-		conn.commit()
-		new_user_id = curs.fetchone()[0]
-		response_data['success'] = True
-		response_data['user_id'] = new_user_id
+	new_user_id = curs.fetchone()[0]
+	response_data['user_id'] = new_user_id
+
 	conn.close()
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
@@ -803,6 +783,36 @@ def read_notifications():
 	response = Response()
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
+
+
+@app.route("/email_availability", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def email_availability():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	email = request_data['emailAddress']
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	response_data = {'email_available': True}
+
+	curs.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
+	conn.commit()
+	response_data = {}
+	if curs.rowcount > 0:
+		response_data['email_available'] = False
+
+	conn.close()
+	response = jsonify(results)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
 
 
 
