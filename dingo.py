@@ -808,7 +808,7 @@ def email_availability():
 		response_data['email_available'] = False
 
 	conn.close()
-	response = jsonify(results)
+	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
 
