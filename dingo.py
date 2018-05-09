@@ -810,7 +810,7 @@ def validate_signup():
 	elif password != confirm_password:
 		response_data['errorMsg'] = "Passwords do not match"
 
-	if response_data['errorMsg']:
+	if 'errorMsg' in response_data:
 		response = jsonify(response_data)
 		response.headers['Access-Control-Allow-Origin'] = '*'
 		return response
