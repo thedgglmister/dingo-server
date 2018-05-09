@@ -786,8 +786,8 @@ def read_notifications():
 	return response
 
 
-@app.route("/email_availability", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def email_availability():
+@app.route("/validate_signup", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def validate_signup():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
@@ -795,17 +795,33 @@ def email_availability():
 		return response
 
 	request_data = request.get_json()
-	email = request_data['emailAddress']
+	first_name = request_data['firstName']
+	last_name = request_data['lastName']
+	password = request_data['password']
+	confirm_password = request_data['confirmPassword']
+	email = request_data['email']
+
+	response_data = {}
+
+	if '' in request_data.values():
+		response_data['errorMsg'] = "Fields cannot be empty"
+	elif len(password) < 8:
+		response_data['errorMsg'] = "Password must be at least 8 characters"
+	elif password != confirm_password:
+		response_data['errorMsg'] = "Passwords do not match"
+
+	if response_data['errorMsg']:
+		response = jsonify(response_data)
+		response.headers['Access-Control-Allow-Origin'] = '*'
+		return response
 	
 	conn = db_connect()
 	curs = conn.cursor()
 
-	response_data = {'email_available': True}
-
 	curs.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
 	conn.commit()
 	if curs.rowcount > 0:
-		response_data['email_available'] = False
+		response_data['errorMsg'] = 'Email address {} has already been used'.format(email)
 
 	conn.close()
 	response = jsonify(response_data)
