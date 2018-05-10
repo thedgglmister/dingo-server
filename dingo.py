@@ -436,7 +436,7 @@ def signup():
 		return response
 
 	request_data = request.get_json()
-	email = request_data.get('emailAddress')
+	email = request_data.get('email')
 	first_name = request_data.get('firstName')
 	last_name = request_data.get('lastName')
 	pw = request_data.get("password")
@@ -449,7 +449,7 @@ def signup():
 	conn.commit()
 	new_user_id = curs.fetchone()[0]
 	response_data = {}
-	response_data['user_id'] = new_user_id
+	response_data['userId'] = new_user_id
 
 	conn.close()
 	response = jsonify(response_data)
@@ -466,7 +466,7 @@ def login():
 		return response
 
 	request_data = request.get_json()
-	email = request_data.get('emailAddress')
+	email = request_data.get('email')
 	pw = request_data.get("password")
 
 	conn = db_connect()
@@ -484,7 +484,7 @@ def login():
 		response_data['error_msg'] = "Incorrect password"
 	else:
 		response_data['success'] = True
-		response_data['user_id'] = result[2]
+		response_data['userId'] = result[2]
 
 	conn.close()
 	response = jsonify(response_data)
