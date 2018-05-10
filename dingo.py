@@ -1061,7 +1061,7 @@ def login():
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""SELECT email, password, u_id FROM users WHERE email = %s;""", (email,))
+	curs.execute("""SELECT email, pw, u_id FROM users WHERE email = %s;""", (email,))
 	conn.commit()
 	result = curs.fetchone();
 	response_data = {}
@@ -1113,8 +1113,7 @@ def get_invs(u_id):
 		inv = {'invId': i_id, 'fromId': u_id}
 		invs.append(inv)
 		if u_id not in profs:
-			prof = {'firstName': first, 'lastName', last, 'img': img}
-			profs[u_id] = prof
+			profs[u_id] = {'firstName': first, 'lastName': last, 'img': img}
 
 	return invs, profs
 
@@ -1228,15 +1227,25 @@ def all_data():
 	response_data['invs'] = invs
 	response_data['nots'] = nots
 	response_data['players'] = games
-	response_data['matches'] = invs
-	response_data['profs'] = nots
-
-
+	response_data['matches'] = matches
+	response_data['allProfs'] = all_profs
 
 	conn.close()
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
