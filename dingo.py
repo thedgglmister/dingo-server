@@ -1152,7 +1152,7 @@ def get_nots(u_id):
 	for g_id, not_id, from_id, type, first, last, img in rows:
 		nots[g_id].append({'notId': not_id, 'fromId': from_id, 'type': type})
 		if from_id not in profs:
-			profs[from_id] = {'firstName': first, 'lastName', last, 'img': img}
+			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img}
 
 	return nots, profs
 
@@ -1167,7 +1167,7 @@ def get_players(u_id):
 	for g_id, u_id, first, last, img in rows:
 		players[g_id].append(u_id)
 		if u_id not in profs:
-			profs[u_id] = {'firstName': first, 'lastName', last, 'img': img}
+			profs[u_id] = {'firstName': first, 'lastName': last, 'img': img}
 
 	return players, profs
 
