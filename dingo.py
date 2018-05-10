@@ -478,14 +478,14 @@ def login():
 	response_data = {}
 	if curs.rowcount == 0:
 		response_data['success'] = False
-		response_data['error_msg'] = "Email Address {} does not exist".format(email)
+		response_data['errorMsg'] = "Email Address {} does not exist".format(email)
 	elif not check_password_hash(result[1], pw):
 		response_data['success'] = False
-		response_data['error_msg'] = "Incorrect password"
+		response_data['errorMsg'] = "Incorrect password"
 	else:
 		response_data['success'] = True
 		response_data['userId'] = result[2]
-
+	print(response_data)
 	conn.close()
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
