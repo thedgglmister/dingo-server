@@ -427,69 +427,7 @@ def validate_breed(): ## give infer image without saving?
 
 
 
-@app.route("/signup", methods=["POST", "OPTIONS"])   #need to only put in lowercase data..
-def signup():
-	if request.method == "OPTIONS":
-		response = Response()
-		response.headers['Access-Control-Allow-Origin'] = "*"
-		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-		return response
 
-	request_data = request.get_json()
-	email = request_data.get('email')
-	first_name = request_data.get('firstName')
-	last_name = request_data.get('lastName')
-	pw = request_data.get("password")
-	img = request_data.get("img")
-
-	conn = db_connect()
-	curs = conn.cursor()
-
-	curs.execute("""INSERT INTO users (first_name, last_name, password, email, img) VALUES (LOWER(%s), LOWER(%s), %s, LOWER(%s), %s) RETURNING user_id;""", (first_name, last_name, generate_password_hash(pw), email, img))
-	conn.commit()
-	new_user_id = curs.fetchone()[0]
-	response_data = {}
-	response_data['userId'] = new_user_id
-
-	conn.close()
-	response = jsonify(response_data)
-	response.headers['Access-Control-Allow-Origin'] = '*'
-	return response
-
-
-@app.route("/login", methods=["POST", "OPTIONS"])   
-def login():
-	if request.method == "OPTIONS":
-		response = Response()
-		response.headers['Access-Control-Allow-Origin'] = "*"
-		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-		return response
-
-	request_data = request.get_json()
-	email = request_data.get('email')
-	pw = request_data.get("password")
-
-	conn = db_connect()
-	curs = conn.cursor()
-
-	curs.execute("""SELECT email, password, user_id FROM users WHERE email = %s;""", (email,))
-	conn.commit()
-	result = curs.fetchone();
-	response_data = {}
-	if curs.rowcount == 0:
-		response_data['success'] = False
-		response_data['errorMsg'] = "Email Address {} does not exist".format(email)
-	elif not check_password_hash(result[1], pw):
-		response_data['success'] = False
-		response_data['errorMsg'] = "Incorrect password"
-	else:
-		response_data['success'] = True
-		response_data['userId'] = result[2]
-	print(response_data)
-	conn.close()
-	response = jsonify(response_data)
-	response.headers['Access-Control-Allow-Origin'] = '*'
-	return response
 
 
 
@@ -786,47 +724,7 @@ def read_notifications():
 	return response
 
 
-@app.route("/validate_signup", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def validate_signup():
-	if request.method == "OPTIONS":
-		response = Response()
-		response.headers['Access-Control-Allow-Origin'] = "*"
-		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-		return response
 
-	request_data = request.get_json()
-	first_name = request_data['firstName']
-	last_name = request_data['lastName']
-	password = request_data['password']
-	confirm_password = request_data['confirmPassword']
-	email = request_data['email']
-
-	response_data = {}
-
-	if '' in request_data.values():
-		response_data['errorMsg'] = "Fields cannot be empty"
-	elif len(password) < 8:
-		response_data['errorMsg'] = "Password must be at least 8 characters"
-	elif password != confirm_password:
-		response_data['errorMsg'] = "Passwords do not match"
-
-	if 'errorMsg' in response_data:
-		response = jsonify(response_data)
-		response.headers['Access-Control-Allow-Origin'] = '*'
-		return response
-	
-	conn = db_connect()
-	curs = conn.cursor()
-
-	curs.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
-	conn.commit()
-	if curs.rowcount > 0:
-		response_data['errorMsg'] = 'Email address {} has already been used'.format(email)
-
-	conn.close()
-	response = jsonify(response_data)
-	response.headers['Access-Control-Allow-Origin'] = '*'
-	return response
 
 
 
@@ -948,6 +846,397 @@ def format_notifications(row):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route("/validate_signup", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def validate_signup():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	first = request_data['firstName']
+	last = request_data['lastName']
+	pw = request_data['password']
+	confirm_pw = request_data['confirmPassword']
+	email = request_data['email']
+
+	response_data = {}
+
+	if '' in request_data.values():
+		response_data['errorMsg'] = "Fields cannot be empty"
+	elif len(pw) < 8:
+		response_data['errorMsg'] = "Password must be at least 8 characters"
+	elif pw != confirm_pw:
+		response_data['errorMsg'] = "Passwords do not match"
+
+	if 'errorMsg' in response_data:
+		response = jsonify(response_data)
+		response.headers['Access-Control-Allow-Origin'] = '*'
+		return response
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""SELECT email FROM users WHERE email = %s;""", (email,))
+	conn.commit()
+	if curs.rowcount > 0:
+		response_data['errorMsg'] = 'Email address {} has already been used'.format(email)
+
+	conn.close()
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route("/signup", methods=["POST", "OPTIONS"])   #need to only put in lowercase data..
+def signup():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json() ##make cleaner? like javascript decompose?
+	email = request_data.get('email')
+	first = request_data.get('firstName')
+	last = request_data.get('lastName')
+	pw = request_data.get("password")
+	img = request_data.get("img")
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""INSERT INTO users (first, last, pw, email, img) VALUES (LOWER(%s), LOWER(%s), %s, LOWER(%s), %s) RETURNING u_id;""", (first, last, generate_password_hash(pw), email, img))
+	conn.commit()
+	u_id = curs.fetchone()[0]
+	response_data = {}
+	response_data['userId'] = u_id
+
+	conn.close()
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route("/login", methods=["POST", "OPTIONS"])   
+def login():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	email = request_data.get('email')
+	pw = request_data.get("password")
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""SELECT email, password, u_id FROM users WHERE email = %s;""", (email,))
+	conn.commit()
+	result = curs.fetchone();
+	response_data = {}
+	if curs.rowcount == 0:
+		response_data['success'] = False
+		response_data['errorMsg'] = "Email Address {} does not exist".format(email)
+	elif not check_password_hash(result[1], pw):
+		response_data['success'] = False
+		response_data['errorMsg'] = "Incorrect password"
+	else:
+		response_data['success'] = True
+		response_data['userId'] = result[2]
+
+	conn.close()
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
+
+
+
+
+
+
+
+
+
+def get_prof(u_id):
+	curs.execute("""SELECT first, last, email, img FROM users WHERE u_id = %s;""" (u_id,))
+	conn.commit()
+	first, last, email, img = curs.fetchone()
+
+	prof = {'firstName': first, 'lastName': last, 'email': email, 'img': img}
+
+	return {u_id: prof}
+
+
+def get_invs(u_id):
+	curs.execute("""SELECT i_id, u_id, first, last, img FROM invs INNER JOIN users ON invs.from_id = users.u_id WHERE to_id = %s ORDER BY sent_time DESC;""", (u_id,))
+	conn.commit()
+	rows = curs.fetchall()
+
+	invs = []
+	profs = {}
+	for row in rows:
+		i_id, u_id, first, last, img = row
+		inv = {'invId': i_id, 'fromId': u_id}
+		invs.append(inv)
+		if u_id not in profs:
+			prof = {'firstName': first, 'lastName', last, 'img': img}
+			profs[u_id] = prof
+
+	return invs, profs
+
+
+def get_games(u_id):
+	curs.execute("""SELECT g_id FROM gameplayers WHERE u_id = %s ORDER BY join_time""", (u_id,))
+	conn.commit()
+	rows = curs.fetchall()
+
+	games = []
+	for g_id in rows:
+		games.append({'gameId': g_id,})
+
+	#add square info to games ###EVENTUALLY JUST MOVE DOGS DATABASE TO LOCALSTORAGE?
+	curs.execute("""SELECT square.g_id, breed, img FROM gameplayers INNER JOIN squares ON gameplayers.g_id = squares.g_id INNER JOIN dogs ON squares.dog_id = dogs.dog_id WHERE gameplayers.u_id = %s ORDER BY squares.g_id, index ASC;""" (u_id,))
+	conn.commit()
+	rows = curs.fetchall()
+
+	squares = defaultdict(list)
+	for g_id, breed, img in rows:
+		squares[g_id].append({'breed': breed, 'img': img}) 
+
+	for i in range(len(games)):
+		games[i]['squares'] = squares[games[i]['gameId']]
+
+	return games
+
+
+def get_nots(u_id):
+	curs.execute("""SELECT g_id, not_id, from_id, type, first, last, img FROM notifications INNER JOIN users ON from_id = u_id WHERE to_id = %s ORDER BY sent_time DESC;""" (u_id,))
+	conn.commit()
+	rows = curs.fetchall()
+
+	nots = defaultdict(list)
+	profs = {}
+	for g_id, not_id, from_id, type, first, last, img in rows:
+		nots[g_id].append({'notId': not_id, 'fromId': from_id, 'type': type})
+		if from_id not in profs:
+			profs[from_id] = {'firstName': first, 'lastName', last, 'img': img}
+
+	return nots, profs
+
+
+def get_players(u_id):
+	curs.execute("""SELECT gp2.g_id, gp2.u_id, first, last, img FROM gameplayers as gp1 INNER JOIN gameplayers as gp2 ON gp1.g_id = gp2.g_id INNER JOIN users ON gp2.u_id = users.u_id WHERE gp1.u_id = %s ORDER BY gp2.join_time;""", (u_id,))
+	conn.commit()
+	rows = curs.fetchall()
+
+	players = defaultdict(list)
+	profs = {}
+	for g_id, u_id, first, last, img in rows:
+		players[g_id].append(u_id)
+		if u_id not in profs:
+			profs[u_id] = {'firstName': first, 'lastName', last, 'img': img}
+
+	return players, profs
+
+
+def get_matches(u_id):
+	curs.execute("""SELECT gp2.g_id, gp2.u_id, index FROM gameplayers as gp1 INNER JOIN gameplayers as gp2 ON gp1.g_id = gp2.g_id INNER JOIN matches ON matches.g_id = gp2.g_id WHERE gp1.u_id = %s;""" (u_id,))
+	conn.commit()
+	rows = curs.fetchall()
+
+	matches = defaultdict(defaultdict(list))
+	for g_id, u_id, index in rows:
+		matches[g_id][u_id].append(index)
+
+	return matches
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route("/all_data", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def all_data():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	u_id = request_data['userId']
+
+	conn = db_connect() ##make these available in helper functions
+	curs = conn.cursor()
+
+	games = get_games(u_id)
+	invs, inv_profs = get_invs(u_id)
+	nots, not_profs = get_nots(u_id)
+	players, player_profs = get_players(u_id)
+	matches = get_matches(u_id)
+	my_profs = get_prof(u_id)
+	all_profs = {**my_profs, **inv_profs, **not_profs, **player_profs}
+	#top_players_profs? or localstorage?
+
+	response_data = {}
+	response_data['games'] = games
+	response_data['invs'] = invs
+	response_data['nots'] = nots
+	response_data['players'] = games
+	response_data['matches'] = invs
+	response_data['profs'] = nots
+
+
+
+	conn.close()
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
 
 
 if __name__ == "__main__":
