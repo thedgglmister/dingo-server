@@ -409,7 +409,7 @@ def validate_breed(): ## give infer image without saving?
 		curs.execute("INSERT INTO matches (gameplayer_id, index) VALUES (%s, %s);""", (gpid, index))
 		conn.commit()
 
-		curs.execute("""INSERT INTO notifications (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND gameplayer_id != %s;""", (gpid, request_data['breedName'], game_id, gpid))
+		curs.execute("""INSERT INTO nots (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND gameplayer_id != %s;""", (gpid, request_data['breedName'], game_id, gpid))
 		conn.commit()
 
 		conn.close()
@@ -464,17 +464,17 @@ def homedata():
 
 
 	#get invitations
-	curs.execute("""SELECT invitation_id, first_name FROM invitations INNER JOIN users ON invitations.inviter_id = users.user_id WHERE invitee_id = %s ORDER BY sent_time;""", (my_user_id,))
+	curs.execute("""SELECT inv_id, first_name FROM invs INNER JOIN users ON invs.inviter_id = users.user_id WHERE invitee_id = %s ORDER BY sent_time;""", (my_user_id,))
 	conn.commit()
 
-	invitations = [{'invitation_id': invitation_id, 'inviter_name': first_name} for invitation_id, first_name in curs.fetchall()] 
+	invs = [{'inv_id': inv_id, 'inviter_name': first_name} for inv_id, first_name in curs.fetchall()] 
 
 
 
 	response_data = {}
 	response_data['myProfile'] = my_profile
 	response_data['games'] = games_data
-	response_data['invitations'] = invitations
+	response_data['invs'] = invs
 
 
 
@@ -543,7 +543,7 @@ def invite():
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""INSERT INTO invitations (invitee_id, game_id, inviter_id) VALUES (%s, %s, %s);""", (invitee_id, game_id, inviter_id))
+	curs.execute("""INSERT INTO invs (invitee_id, game_id, inviter_id) VALUES (%s, %s, %s);""", (invitee_id, game_id, inviter_id))
 	conn.commit()
 
 	response = Response()
@@ -561,12 +561,12 @@ def accept_invite():
 		return response
 
 	request_data = request.get_json()
-	invitation_id = request_data['invitation_id']
+	inv_id = request_data['inv_id']
 
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""DELETE FROM invitations WHERE invitation_id = %s RETURNING game_id, invitee_id;""", (invitation_id,)) #delete all inviations to that
+	curs.execute("""DELETE FROM invs WHERE inv_id = %s RETURNING game_id, invitee_id;""", (inv_id,)) #delete all inviations to that
 	conn.commit()
 	game_id, user_id = curs.fetchone()
 
@@ -576,7 +576,7 @@ def accept_invite():
 
 	game_data = get_game_data(game_id, new_gpid, curs, conn)
 
-	curs.execute("""INSERT INTO notifications (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND in_game = TRUE AND gameplayer_id != %s;""", (new_gpid, 'join', game_id, new_gpid))
+	curs.execute("""INSERT INTO nots (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND in_game = TRUE AND gameplayer_id != %s;""", (new_gpid, 'join', game_id, new_gpid))
 	conn.commit()
 
 	conn.close()
@@ -595,12 +595,12 @@ def delete_invite():
 		return response
 
 	request_data = request.get_json()
-	invitation_id = request_data['invitation_id']
+	inv_id = request_data['inv_id']
 	
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""DELETE FROM invitations WHERE invitation_id = %s;""", (invitation_id,))
+	curs.execute("""DELETE FROM invs WHERE inv_id = %s;""", (inv_id,))
 	conn.commit()
 
 	conn.close()
@@ -688,7 +688,7 @@ def leave_game():
 	curs.execute("""UPDATE gameplayers SET in_game = FALSE WHERE gameplayer_id = %s;""", (gpid,))
 	conn.commit()
 
-	curs.execute("""INSERT INTO notifications (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND gameplayer_id != %s;""", (gpid, 'leave', game_id, gpid))
+	curs.execute("""INSERT INTO nots (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND gameplayer_id != %s;""", (gpid, 'leave', game_id, gpid))
 	conn.commit()
 
 	conn.close()
@@ -699,8 +699,8 @@ def leave_game():
 
 
 
-@app.route("/read_notifications", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def read_notifications():
+@app.route("/read_nots", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def read_nots():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
@@ -708,13 +708,13 @@ def read_notifications():
 		return response
 
 	request_data = request.get_json()
-	notification_ids = request_data['read_notifications']
+	not_ids = request_data['read_nots']
 	
 	conn = db_connect()
 	curs = conn.cursor()
 
-	for id in notification_ids:
-		curs.execute("""UPDATE notifications SET read = TRUE WHERE notification_id = %s;""", (id,))
+	for id in not_ids:
+		curs.execute("""UPDATE nots SET read = TRUE WHERE not_id = %s;""", (id,))
 		conn.commit()
 
 	conn.close()
@@ -816,19 +816,19 @@ def get_game_data(game_id, gpid, curs, conn):
 	print(gpid)
 
 
-	#notifications...
+	#nots...
 	print(gpid)
-	curs.execute("""SELECT notification_id, notifier_id, first_name, img, type, read FROM notifications INNER JOIN gameplayers ON notifications.notifier_id = gameplayers.gameplayer_id  INNER JOIN users ON gameplayers.user_id = users.user_id WHERE notifications.gameplayer_id = %s ORDER BY sent_time;""", (gpid,))
+	curs.execute("""SELECT not_id, notifier_id, first_name, img, type, read FROM nots INNER JOIN gameplayers ON nots.notifier_id = gameplayers.gameplayer_id  INNER JOIN users ON gameplayers.user_id = users.user_id WHERE nots.gameplayer_id = %s ORDER BY sent_time;""", (gpid,))
 	conn.commit()
 
-	game_data['notifications'] = list(map(format_notifications, curs.fetchall())) ##
+	game_data['nots'] = list(map(format_nots, curs.fetchall())) ##
 
 	return game_data
 
 
-def format_notifications(row):
+def format_nots(row):
 	notification = {}
-	notification['notification_id'] = row[0]
+	notification['not_id'] = row[0]
 	notification['read'] = row[5]
 	notifier = {}
 	notifier['gpid'] = row[1]
@@ -1134,15 +1134,15 @@ def all_data():
 
 
 	def get_invs(u_id):
-		curs.execute("""SELECT i_id, u_id, first, last, img FROM invs INNER JOIN users ON invs.from_id = users.u_id WHERE to_id = %s ORDER BY sent_time DESC;""", (u_id,))
+		curs.execute("""SELECT inv_id, u_id, first, last, img FROM invs INNER JOIN users ON invs.from_id = users.u_id WHERE to_id = %s ORDER BY sent_time DESC;""", (u_id,))
 		conn.commit()
 		rows = curs.fetchall()
 
 		invs = []
 		profs = {}
 		for row in rows:
-			i_id, u_id, first, last, img = row
-			inv = {'invId': i_id, 'fromId': u_id}
+			inv_id, u_id, first, last, img = row
+			inv = {'invId': inv_id, 'fromId': u_id}
 			invs.append(inv)
 			if u_id not in profs:
 				profs[u_id] = {'firstName': first, 'lastName': last, 'img': img}
@@ -1177,7 +1177,7 @@ def all_data():
 
 
 	def get_nots(u_id):
-		curs.execute("""SELECT g_id, not_id, from_id, type, first, last, img FROM notifications INNER JOIN users ON from_id = u_id WHERE to_id = %s ORDER BY sent_time DESC;""" (u_id,))
+		curs.execute("""SELECT g_id, not_id, from_id, type, first, last, img FROM nots INNER JOIN users ON from_id = u_id WHERE to_id = %s ORDER BY sent_time DESC;""" (u_id,))
 		conn.commit()
 		rows = curs.fetchall()
 
