@@ -1124,7 +1124,7 @@ def all_data():
 	curs = conn.cursor()
 
 	def get_prof(u_id):
-		curs.execute("""SELECT first, last, email, img FROM users WHERE u_id = %s;""" (u_id,))
+		curs.execute("""SELECT first, last, email, img FROM users WHERE u_id = %s;""", (u_id,))
 		conn.commit()
 		first, last, email, img = curs.fetchone()
 
@@ -1177,7 +1177,7 @@ def all_data():
 
 
 	def get_nots(u_id):
-		curs.execute("""SELECT g_id, not_id, from_id, type, first, last, img FROM nots INNER JOIN users ON from_id = u_id WHERE to_id = %s ORDER BY sent_time DESC;""" (u_id,))
+		curs.execute("""SELECT g_id, not_id, from_id, type, first, last, img FROM nots INNER JOIN users ON from_id = u_id WHERE to_id = %s ORDER BY sent_time DESC;""", (u_id,))
 		conn.commit()
 		rows = curs.fetchall()
 
@@ -1207,7 +1207,7 @@ def all_data():
 
 
 	def get_matches(u_id):
-		curs.execute("""SELECT gp2.g_id, gp2.u_id, index FROM gameplayers as gp1 INNER JOIN gameplayers as gp2 ON gp1.g_id = gp2.g_id INNER JOIN matches ON matches.g_id = gp2.g_id WHERE gp1.u_id = %s;""" (u_id,))
+		curs.execute("""SELECT gp2.g_id, gp2.u_id, index FROM gameplayers as gp1 INNER JOIN gameplayers as gp2 ON gp1.g_id = gp2.g_id INNER JOIN matches ON matches.g_id = gp2.g_id WHERE gp1.u_id = %s;""", (u_id,))
 		conn.commit()
 		rows = curs.fetchall()
 
