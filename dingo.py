@@ -1162,7 +1162,7 @@ def all_data():
 
 		print(type(curs))
 		#add square info to games ###EVENTUALLY JUST MOVE DOGS DATABASE TO LOCALSTORAGE?
-		curs.execute("""SELECT square.g_id, breed, img FROM gameplayers INNER JOIN squares ON gameplayers.g_id = squares.g_id INNER JOIN dogs ON squares.dog_id = dogs.dog_id WHERE gameplayers.u_id = %s ORDER BY squares.g_id, index ASC;""", (u_id,))
+		curs.execute("""SELECT squares.g_id, breed, img FROM gameplayers INNER JOIN squares ON gameplayers.g_id = squares.g_id INNER JOIN dogs ON squares.dog_id = dogs.dog_id WHERE gameplayers.u_id = %s ORDER BY squares.g_id, index ASC;""", (u_id,))
 		conn.commit()
 		rows = curs.fetchall()
 
