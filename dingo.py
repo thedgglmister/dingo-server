@@ -1211,7 +1211,7 @@ def all_data():
 		conn.commit()
 		rows = curs.fetchall()
 
-		matches = defaultdict(defaultdict(list))
+		matches = defaultdict(lambda: defaultdict(list))
 		for g_id, u_id, index in rows:
 			matches[g_id][u_id].append(index)
 
