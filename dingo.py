@@ -1217,7 +1217,7 @@ def all_data():
 
 		return matches
 
-
+	print(1)
 
 
 	games = get_games(u_id)
@@ -1228,7 +1228,7 @@ def all_data():
 	my_profs = get_prof(u_id)
 	all_profs = {**my_profs, **inv_profs, **not_profs, **player_profs}
 	#top_players_profs? or localstorage?
-
+	print(2)
 	response_data = {}
 	response_data['games'] = games
 	response_data['invs'] = invs
@@ -1236,8 +1236,8 @@ def all_data():
 	response_data['players'] = games
 	response_data['matches'] = matches
 	response_data['allProfs'] = all_profs
-
-	print(response_data['allProfs'])
+	print(3)
+	print(my_profs)
 
 	conn.close()
 	response = jsonify(response_data)
