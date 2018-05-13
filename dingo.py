@@ -1237,6 +1237,8 @@ def all_data():
 	response_data['matches'] = matches
 	response_data['allProfs'] = all_profs
 
+	print(response_data['allProfs'])
+
 	conn.close()
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
