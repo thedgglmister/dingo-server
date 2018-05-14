@@ -670,8 +670,8 @@ def search_players():
 	return response
 
 
-@app.route("/leave_game", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def leave_game():
+@app.route("/leavegame", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def leavegame():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
@@ -1228,6 +1228,71 @@ def newgame():
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route("/leave_game", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def leave_game():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	u_id = request_data['userId']
+	g_id = request_data['gameId']
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""DELETE FROM gameplayers WHERE g_id = %s AND u_id = %s;""", (g_id, u_id))
+	conn.commit()
+
+	curs.execute("""INSERT INTO nots (g_id, from_id, to_id, type) SELECT %s, %s, to_id, 'leave' FROM gameplayers WHERE g_id = %s AND u_id != %s;""", (g_id, u_id, g_id, u_id))
+	conn.commit()
+
+	conn.close()
+
+	response = Response()
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
