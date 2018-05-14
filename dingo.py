@@ -1221,7 +1221,7 @@ def newgame():
 	response_data['squares'] = get_squares(g_id, curs, conn)
 	response_data['players'] = [u_id]
 	response_data['nots'] = []
-	reponse_data['matches'] = {u_id: []}
+	response_data['matches'] = {u_id: []}
 
 	conn.close()
 
