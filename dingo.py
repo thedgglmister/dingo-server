@@ -1137,7 +1137,7 @@ def all_data():
 		game_players, game_player_profs = get_players(g_id, u_id, curs, conn)
 		game_nots, game_nots_profs = get_nots(g_id, u_id, curs, conn)
 
-		games.append({'g_id': g_id, 'squares': game_squares})
+		games.append({'gameId': g_id, 'squares': game_squares})
 		matches[g_id] = game_matches
 		players[g_id] = game_players
 		nots[g_id] = game_nots
@@ -1216,10 +1216,9 @@ def newgame():
 		curs.execute("""INSERT INTO squares (g_id, index, dog_id) VALUES (%s, %s, %s);""", (g_id, index, dog_id))
 		conn.commit()
 
-	squares = get_squares(g_id, curs, conn)
-
 	response_data = {}
-	response_data['game'] = {'g_id': g_id, 'squares': squares}
+	response_data['gameId'] = g_id
+	response_data['squares'] = get_squares(g_id, curs, conn)
 	response_data['players'] = [u_id]
 	response_data['nots'] = []
 	reponse_data['matches'] = {u_id: []}
