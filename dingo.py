@@ -1268,7 +1268,7 @@ def leave_game():
 	curs.execute("""DELETE FROM gameplayers WHERE g_id = %s AND u_id = %s;""", (g_id, u_id))
 	conn.commit()
 
-	curs.execute("""INSERT INTO nots (g_id, from_id, to_id, type) SELECT %s, %s, to_id, 'leave' FROM gameplayers WHERE g_id = %s AND u_id != %s;""", (g_id, u_id, g_id, u_id))
+	curs.execute("""INSERT INTO nots (g_id, from_id, to_id, type) SELECT %s, %s, u_id, 'leave' FROM gameplayers WHERE g_id = %s AND u_id != %s;""", (g_id, u_id, g_id, u_id))
 	conn.commit()
 
 	conn.close()
@@ -1396,6 +1396,22 @@ def get_matches(g_id, curs, conn):
 		matches[u_id].append(index)
 
 	return matches
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
