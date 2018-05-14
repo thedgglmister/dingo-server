@@ -1305,7 +1305,7 @@ def get_nots(g_id, u_id, curs, conn):
 
 
 def get_players(g_id, u_id, curs, conn):
-	curs.execute("""SELECT users.u_id, first, last, img FROM gameplayers INNER JOIN users ON gameplayers.u_id = users.u_id WHERE g_id = %s ORDER BY join_time;""", (g_id,))
+	curs.execute("""SELECT users.u_id, first, last, img FROM gameplayers INNER JOIN users ON gameplayers.u_id = users.u_id WHERE g_id = %s ORDER BY gameplayers.join_time;""", (g_id,))
 	conn.commit()
 	rows = curs.fetchall()
 
