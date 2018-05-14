@@ -1199,7 +1199,7 @@ def newgame():
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""INSERT INTO games (game_id) VALUES (DEFAULT) RETURNING game_id;""")
+	curs.execute("""INSERT INTO games (g_id) VALUES (DEFAULT) RETURNING g_id;""")
 	conn.commit()
 	g_id = curs.fetchone()[0]
 
