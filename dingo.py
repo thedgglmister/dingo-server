@@ -1248,7 +1248,7 @@ def get_my_prof(u_id, curs, conn):
 	conn.commit()
 	first, last, email, img = curs.fetchone()
 
-	my_prof = {u_id: {'firstName': first, 'lastName': last, 'email': email, 'img': img}}
+	my_prof = {u_id: {'firstName': first, 'lastName': last, 'email': email, 'img': img, 'userId': u_id}}
 	return my_prof
 
 
@@ -1266,7 +1266,7 @@ def get_invs(u_id, curs, conn):
 		inv = {'invId': inv_id, 'fromId': from_id}
 		invs.append(inv)
 		if from_id not in profs:
-			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img}
+			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': from_id}
 
 	return invs, profs
 
@@ -1299,7 +1299,7 @@ def get_nots(g_id, u_id, curs, conn):
 	for not_id, from_id, type, first, last, img in rows:
 		nots.append({'notId': not_id, 'fromId': from_id, 'type': type})
 		if from_id not in profs:
-			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img}
+			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': from_id}
 
 	return nots, profs
 
@@ -1314,7 +1314,7 @@ def get_players(g_id, u_id, curs, conn):
 	for player_id, first, last, img in rows:
 		players.append(player_id)
 		if player_id not in profs:
-			profs[player_id] = {'firstName': first, 'lastName': last, 'img': img}
+			profs[player_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': player_id}
 
 	players.insert(0, players.pop(players.index(u_id)))
 
