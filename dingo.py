@@ -1290,14 +1290,14 @@ def get_squares(g_id, curs, conn):
 
 
 def get_nots(g_id, u_id, curs, conn):
-	curs.execute("""SELECT not_id, from_id, type, first, last, img FROM nots INNER JOIN users ON from_id = u_id WHERE to_id = %s AND g_id = %s ORDER BY sent_time DESC;""", (u_id, g_id))
+	curs.execute("""SELECT not_id, from_id, type, read, first, last, img FROM nots INNER JOIN users ON from_id = u_id WHERE to_id = %s AND g_id = %s ORDER BY sent_time DESC;""", (u_id, g_id))
 	conn.commit()
 	rows = curs.fetchall()
 
 	nots = []
 	profs = {}
-	for not_id, from_id, type, first, last, img in rows:
-		nots.append({'notId': not_id, 'fromId': from_id, 'type': type})
+	for not_id, from_id, type, read, first, last, img in rows:
+		nots.append({'notId': not_id, 'fromId': from_id, 'type': type, 'read': read})
 		if from_id not in profs:
 			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': from_id}
 
