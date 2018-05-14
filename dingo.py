@@ -1123,121 +1123,42 @@ def all_data():
 	conn = db_connect() ##make these available in helper functions
 	curs = conn.cursor()
 
-	def get_prof(u_id):
-		curs.execute("""SELECT first, last, email, img FROM users WHERE u_id = %s;""", (u_id,))
-		conn.commit()
-		first, last, email, img = curs.fetchone()
+	invs = []
+	all_profs = {}
+	games = []
+	players = {}
+	matches = {}
+	nots = {}
 
-		prof = {'firstName': first, 'lastName': last, 'email': email, 'img': img}
+	g_ids = get_g_ids(u_id, curs, conn)
+	for g_id in g_ids:
+		game_squares = get_squares(g_id, curs, conn)
+		game_matches = get_matches(g_id, curs, conn)
+		game_players, game_player_profs = get_players(g_id, u_id, curs, conn)
+		game_nots, game_nots_profs = get_nots(g_id, u_id, curs, conn)
 
-		return {u_id: prof}
+		games.append({'g_id': g_id, 'squares': game_squares})
+		matches[g_id] = game_matches
+		players[g_id] = game_players
+		nots[g_id] = game_nots
+		all_profs.update(game_player_profs)
+		all_profs.update(game_nots_profs)
 
+	invs, invs_profs = get_invs(u_id, curs, conn)
+	my_prof = get_my_prof(u_id, curs, conn)
 
-	def get_invs(u_id):
-		curs.execute("""SELECT inv_id, u_id, first, last, img FROM invs INNER JOIN users ON invs.from_id = users.u_id WHERE to_id = %s ORDER BY sent_time DESC;""", (u_id,))
-		conn.commit()
-		rows = curs.fetchall()
-
-		invs = []
-		profs = {}
-		for row in rows:
-			inv_id, u_id, first, last, img = row
-			inv = {'invId': inv_id, 'fromId': u_id}
-			invs.append(inv)
-			if u_id not in profs:
-				profs[u_id] = {'firstName': first, 'lastName': last, 'img': img}
-
-		return invs, profs
-
-
-	def get_games(u_id):
-		curs.execute("""SELECT g_id FROM gameplayers WHERE u_id = %s ORDER BY join_time""", (u_id,))
-		conn.commit()
-		rows = curs.fetchall()
-
-		games = []
-		for g_id in rows:
-			games.append({'gameId': g_id,})
-
-
-		print(type(curs))
-		#add square info to games ###EVENTUALLY JUST MOVE DOGS DATABASE TO LOCALSTORAGE?
-		curs.execute("""SELECT squares.g_id, breed, img FROM gameplayers INNER JOIN squares ON gameplayers.g_id = squares.g_id INNER JOIN dogs ON squares.dog_id = dogs.dog_id WHERE gameplayers.u_id = %s ORDER BY squares.g_id, index ASC;""", (u_id,))
-		conn.commit()
-		rows = curs.fetchall()
-
-		squares = defaultdict(list)
-		for g_id, breed, img in rows:
-			squares[g_id].append({'breed': breed, 'img': img}) 
-
-		for i in range(len(games)):
-			games[i]['squares'] = squares[games[i]['gameId']]
-
-		return games
-
-
-	def get_nots(u_id):
-		curs.execute("""SELECT g_id, not_id, from_id, type, first, last, img FROM nots INNER JOIN users ON from_id = u_id WHERE to_id = %s ORDER BY sent_time DESC;""", (u_id,))
-		conn.commit()
-		rows = curs.fetchall()
-
-		nots = defaultdict(list)
-		profs = {}
-		for g_id, not_id, from_id, type, first, last, img in rows:
-			nots[g_id].append({'notId': not_id, 'fromId': from_id, 'type': type})
-			if from_id not in profs:
-				profs[from_id] = {'firstName': first, 'lastName': last, 'img': img}
-
-		return nots, profs
-
-
-	def get_players(u_id):
-		curs.execute("""SELECT gp2.g_id, gp2.u_id, first, last, img FROM gameplayers as gp1 INNER JOIN gameplayers as gp2 ON gp1.g_id = gp2.g_id INNER JOIN users ON gp2.u_id = users.u_id WHERE gp1.u_id = %s ORDER BY gp2.join_time;""", (u_id,))
-		conn.commit()
-		rows = curs.fetchall()
-
-		players = defaultdict(list)
-		profs = {}
-		for g_id, u_id, first, last, img in rows:
-			players[g_id].append(u_id)
-			if u_id not in profs:
-				profs[u_id] = {'firstName': first, 'lastName': last, 'img': img}
-
-		return players, profs
-
-
-	def get_matches(u_id):
-		curs.execute("""SELECT gp2.g_id, gp2.u_id, index FROM gameplayers as gp1 INNER JOIN gameplayers as gp2 ON gp1.g_id = gp2.g_id INNER JOIN matches ON matches.g_id = gp2.g_id WHERE gp1.u_id = %s;""", (u_id,))
-		conn.commit()
-		rows = curs.fetchall()
-
-		matches = defaultdict(lambda: defaultdict(list))
-		for g_id, u_id, index in rows:
-			matches[g_id][u_id].append(index)
-
-		return matches
-
-	print(1)
-
-
-	games = get_games(u_id)
-	invs, inv_profs = get_invs(u_id)
-	nots, not_profs = get_nots(u_id)
-	players, player_profs = get_players(u_id)
-	matches = get_matches(u_id)
-	my_profs = get_prof(u_id)
-	all_profs = {**my_profs, **inv_profs, **not_profs, **player_profs}
+	all_profs.update(invs_profs)
+	all_profs.update(my_prof)
 	#top_players_profs? or localstorage?
-	print(2)
+
 	response_data = {}
 	response_data['games'] = games
 	response_data['invs'] = invs
 	response_data['nots'] = nots
-	response_data['players'] = games
+	response_data['players'] = players
 	response_data['matches'] = matches
 	response_data['allProfs'] = all_profs
-	print(3)
-	print(my_profs)
+
 
 	conn.close()
 	response = jsonify(response_data)
@@ -1254,6 +1175,160 @@ def all_data():
 
 
 
+
+
+
+
+
+
+
+
+
+
+@app.route("/newgame", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def newgame():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	u_id = request_data['userId']
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""INSERT INTO games (game_id) VALUES (DEFAULT) RETURNING game_id;""")
+	conn.commit()
+	g_id = curs.fetchone()[0]
+
+	curs.execute("""INSERT INTO gameplayers (g_id, u_id) VALUES (%s, %s);""", (g_id, u_id))
+	conn.commit()
+
+	#add squares for game
+	curs.execute("""SELECT dog_id FROM dogs;""")
+	conn.commit()
+	all_dog_ids = curs.fetchall()
+	random.shuffle(all_dog_ids)
+
+	for index, dog_id in enumerate(all_dog_ids[:25]):
+		curs.execute("""INSERT INTO squares (g_id, index, dog_id) VALUES (%s, %s, %s);""", (g_id, index, dog_id))
+		conn.commit()
+
+	squares = get_squares(g_id, curs, conn)
+
+	response_data = {}
+	response_data['newGame'] = {'g_id': g_id, 'squares': squares}
+
+	conn.close()
+
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def get_my_prof(u_id, curs, conn):
+	curs.execute("""SELECT first, last, email, img FROM users WHERE u_id = %s;""", (u_id,))
+	conn.commit()
+	first, last, email, img = curs.fetchone()
+
+	my_prof = {u_id: {'firstName': first, 'lastName': last, 'email': email, 'img': img}}
+	return my_prof
+
+
+
+
+def get_invs(u_id, curs, conn):
+	curs.execute("""SELECT inv_id, u_id, first, last, img FROM invs INNER JOIN users ON invs.from_id = users.u_id WHERE to_id = %s ORDER BY sent_time DESC;""", (u_id,))
+	conn.commit()
+	rows = curs.fetchall()
+
+	invs = []
+	profs = {}
+	for row in rows:
+		inv_id, from_id, first, last, img = row
+		inv = {'invId': inv_id, 'fromId': from_id}
+		invs.append(inv)
+		if from_id not in profs:
+			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img}
+
+	return invs, profs
+
+
+def get_g_ids(u_id, curs, conn):
+	curs.execute("""SELECT g_id FROM gameplayers WHERE u_id = %s ORDER BY join_time""", (u_id,))
+	conn.commit()
+	g_ids = [row[0] for row in curs.fetchall()]
+	return g_ids
+
+
+def get_squares(g_id, curs, conn):
+	###EVENTUALLY JUST MOVE DOGS DATABASE TO LOCALSTORAGE?
+	curs.execute("""SELECT breed, img FROM squares INNER JOIN dogs ON squares.dog_id = dogs.dog_id WHERE squares.g_id = %s ORDER BY index ASC;""", (g_id,))
+	conn.commit()
+	rows = curs.fetchall()
+
+	squares = [{'breed': breed, 'img': img} for breed, img in rows]
+
+	return squares
+
+
+def get_nots(g_id, u_id, curs, conn):
+	curs.execute("""SELECT not_id, from_id, type, first, last, img FROM nots INNER JOIN users ON from_id = u_id WHERE to_id = %s AND g_id = %s ORDER BY sent_time DESC;""", (u_id, g_id))
+	conn.commit()
+	rows = curs.fetchall()
+
+	nots = []
+	profs = {}
+	for not_id, from_id, type, first, last, img in rows:
+		nots.append({'notId': not_id, 'fromId': from_id, 'type': type})
+		if from_id not in profs:
+			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img}
+
+	return nots, profs
+
+
+def get_players(g_id, u_id, curs, conn):
+	curs.execute("""SELECT users.u_id, first, last, img FROM gameplayers INNER JOIN users ON gameplayers.u_id = users.u_id WHERE g_id = %s ORDER BY join_time;""", (g_id,))
+	conn.commit()
+	rows = curs.fetchall()
+
+	players = []
+	profs = {}
+	for player_id, first, last, img in rows:
+		players.append(player_id)
+		if player_id not in profs:
+			profs[player_id] = {'firstName': first, 'lastName': last, 'img': img}
+
+	players.insert(0, players.pop(players.index(u_id)))
+
+	return players, profs
+
+
+def get_matches(g_id, curs, conn):
+	curs.execute("""SELECT u_id, index FROM matches WHERE g_id = %s;""", (g_id,))
+	conn.commit()
+	rows = curs.fetchall()
+
+	matches = defaultdict(list)
+	for u_id, index in rows:
+		matches[u_id].append(index)
+
+	return matches
 
 
 
