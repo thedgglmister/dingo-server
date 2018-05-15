@@ -1334,8 +1334,8 @@ def update_profile():
 	conn.commit()
 
 	conn.close()
-	
-	response_data['firstname'] = first
+
+	response_data['firstName'] = first
 	response_data['lastName'] = last
 	response_data['email'] = email
 	response_data['img'] = img
