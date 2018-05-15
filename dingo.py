@@ -1393,6 +1393,7 @@ def accept_invite():
 	response_data['game'] = [{'gameId': g_id, 'squares': game_squares}]
 	response_data['matches'] = {g_id: game_matches}
 	response_data['players'] = {g_id: game_players}
+	response_data['nots'] = {g_id: []}
 	response_data['profs'] = game_player_profs
 
 	conn.close()
@@ -1412,6 +1413,32 @@ def accept_invite():
 
 
 
+
+
+
+
+@app.route("/decline_invite", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def decline_invite():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	inv_id = request_data['invId']
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""DELETE FROM invs WHERE inv_id = %s;""", (inv_id,))
+	conn.commit()
+
+	conn.close()
+
+	response = Response()
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
 
 
 
