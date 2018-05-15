@@ -1390,7 +1390,7 @@ def accept_invite():
 	game_players, game_player_profs = get_players(g_id, u_id, curs, conn)
 
 	response_data = {}
-	response_data['game'] = [{'gameId': g_id, 'squares': game_squares}]
+	response_data['games'] = [{'gameId': g_id, 'squares': game_squares}]
 	response_data['matches'] = {g_id: game_matches}
 	response_data['players'] = {g_id: game_players}
 	response_data['nots'] = {g_id: []}
