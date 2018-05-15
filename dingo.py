@@ -1334,14 +1334,12 @@ def update_profile():
 	conn.commit()
 
 	conn.close()
-
-	print(first)
 	
 	response_data['firstname'] = first
 	response_data['lastName'] = last
 	response_data['email'] = email
 	response_data['img'] = img
-	response = jsonify(request_data)
+	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
 
