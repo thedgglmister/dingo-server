@@ -1321,7 +1321,7 @@ def update_profile():
 		response.headers['Access-Control-Allow-Origin'] = '*'
 		return response
 
-	curs.execute("""SELECT email from users WHERE email = %s;""", (email,))
+	curs.execute("""SELECT email, u_id from users WHERE email = %s AND u_id != %s;""", (email, u_id))
 	conn.commit()
 	if curs.rowcount > 0:
 		conn.close()
