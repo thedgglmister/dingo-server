@@ -955,11 +955,11 @@ def validate_signup():
 		return response
 
 	request_data = request.get_json()
-	first = request_data['firstName']
-	last = request_data['lastName']
+	first = request_data['firstName'].title()
+	last = request_data['lastName'].title()
 	pw = request_data['password']
 	confirm_pw = request_data['confirmPassword']
-	email = lower(request_data['email'])
+	email = request_data['email'].lower()
 
 	response_data = {}
 
@@ -1011,16 +1011,16 @@ def signup():
 		return response
 
 	request_data = request.get_json() ##make cleaner? like javascript decompose?
-	email = request_data.get('email')
-	first = request_data.get('firstName')
-	last = request_data.get('lastName')
+	email = request_data.get('email').lower()
+	first = request_data.get('firstName').title()
+	last = request_data.get('lastName').title()
 	pw = request_data.get("password")
 	img = request_data.get("img")
 
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""INSERT INTO users (first, last, pw, email, img) VALUES (LOWER(%s), LOWER(%s), %s, LOWER(%s), %s) RETURNING u_id;""", (first, last, generate_password_hash(pw), email, img))
+	curs.execute("""INSERT INTO users (first, last, pw, email, img) VALUES (%s, %s, %s, %s, %s) RETURNING u_id;""", (first, last, generate_password_hash(pw), email, img))
 	conn.commit()
 	u_id = curs.fetchone()[0]
 	response_data = {}
@@ -1055,7 +1055,7 @@ def login():
 		return response
 
 	request_data = request.get_json()
-	email = lower(request_data.get('email'))
+	email = request_data.get('email').lower()
 	pw = request_data.get("password")
 
 	conn = db_connect()
@@ -1304,9 +1304,9 @@ def update_profile():
 		return response
 
 	request_data = request.get_json()
-	first = lower(request_data.get('firstName'))
-	last = lower(request_data.get('lastName'))
-	email = lower(request_data.get('email'))
+	first = request_data.get('firstName').title()
+	last = request_data.get('lastName').title()
+	email = request_data.get('email').lower()
 	img = request_data.get('img')
 	u_id = request_data.get("userId")
 	
@@ -1335,13 +1335,10 @@ def update_profile():
 
 	conn.close()
 
-	response_data = {}
-	response_data['userID'] = u_id
-	response_data['firstname'] = first.title()
-	response_data['lastName'] = last.title()
-	response_data['email'] = email
-	response_data['img'] = img
-	response = jsonify(response_data)
+	request_data['firstname'] = first
+	request_data['lastName'] = last
+	request_data['email'] = email
+	response = jsonify(request_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
 
@@ -1372,7 +1369,7 @@ def get_my_prof(u_id, curs, conn):
 	conn.commit()
 	first, last, email, img = curs.fetchone()
 
-	my_prof = {u_id: {'firstName': first.title(), 'lastName': last.title(), 'email': email, 'img': img, 'userId': u_id}}
+	my_prof = {u_id: {'firstName': first, 'lastName': last, 'email': email, 'img': img, 'userId': u_id}}
 	return my_prof
 
 
@@ -1390,7 +1387,7 @@ def get_invs(u_id, curs, conn):
 		inv = {'invId': inv_id, 'fromId': from_id}
 		invs.append(inv)
 		if from_id not in profs:
-			profs[from_id] = {'firstName': first.title(), 'lastName': last.title(), 'img': img, 'userId': from_id}
+			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': from_id}
 
 	return invs, profs
 
@@ -1408,7 +1405,7 @@ def get_squares(g_id, curs, conn):
 	conn.commit()
 	rows = curs.fetchall()
 
-	squares = [{'breed': breed.title(), 'img': img} for breed, img in rows]
+	squares = [{'breed': breed, 'img': img} for breed, img in rows]
 
 	return squares
 
@@ -1423,7 +1420,7 @@ def get_nots(g_id, u_id, curs, conn):
 	for not_id, from_id, type, read, first, last, img in rows:
 		nots.append({'notId': not_id, 'fromId': from_id, 'type': type, 'read': read})
 		if from_id not in profs:
-			profs[from_id] = {'firstName': first.title(), 'lastName': last.title(), 'img': img, 'userId': from_id}
+			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': from_id}
 
 	return nots, profs
 
@@ -1438,7 +1435,7 @@ def get_players(g_id, u_id, curs, conn):
 	for player_id, first, last, img in rows:
 		players.append(player_id)
 		if player_id not in profs:
-			profs[player_id] = {'firstName': first.title(), 'lastName': last.title(), 'img': img, 'userId': player_id}
+			profs[player_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': player_id}
 
 	players.insert(0, players.pop(players.index(u_id)))
 
