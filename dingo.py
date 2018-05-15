@@ -552,8 +552,8 @@ def invite():
 
 
 
-@app.route("/accept_invite", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def accept_invite():
+@app.route("/acceptinvite", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def acceptinvite():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
@@ -1342,6 +1342,81 @@ def update_profile():
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route("/accept_invite", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def accept_invite():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	inv_id = request_data['inv_id']
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""DELETE FROM invs WHERE inv_id = %s RETURNING g_id, to_id;""", (inv_id,)) #delete all inviations to that game?
+	conn.commit()
+	g_id, u_id = curs.fetchone()
+
+	curs.execute("""INSERT INTO nots (to_id, from_id, type) SELECT u_id, %s, 'join' FROM gameplayers WHERE g_id = %s;""", (u_id, g_id))
+	conn.commit()
+
+	curs.execute("""INSERT INTO gameplayers (g_id, u_id) VALUES (%s, %s);""", (g_id, u_id))
+	conn.commit()
+
+	game_squares = get_squares(g_id, curs, conn)
+	game_matches = get_matches(g_id, curs, conn)
+	game_players, game_player_profs = get_players(g_id, u_id, curs, conn)
+
+	response_data = {}
+	response_data['game'] = [{'gameId': g_id, 'squares': game_squares}]
+	response_data['matches'] = {g_id: game_matches}
+	response_data['players'] = {g_id: game_players}
+	response_data['profs'] = game_player_profs
+
+	conn.close()
+
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
