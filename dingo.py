@@ -1375,7 +1375,7 @@ def accept_invite():
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""DELETE FROM invs WHERE inv_id = %s RETURNING g_id, to_id;""", (inv_id,)) #delete all inviations to that game?
+	curs.execute("""DELETE FROM invs WHERE g_id = (SELECT g_id FROM invs WHERE inv_id = %s) RETURNING g_id, to_id;""", (inv_id,))
 	conn.commit()
 	g_id, u_id = curs.fetchone()
 
