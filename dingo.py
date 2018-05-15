@@ -1335,9 +1335,10 @@ def update_profile():
 
 	conn.close()
 
-	request_data['firstname'] = first
-	request_data['lastName'] = last
-	request_data['email'] = email
+	response_data['firstname'] = first
+	response_data['lastName'] = last
+	response_data['email'] = email
+	response_data['img'] = img
 	response = jsonify(request_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
