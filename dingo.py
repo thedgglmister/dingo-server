@@ -730,8 +730,8 @@ def read_nots():
 
 
 
-@app.route("/update_profile", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def update_profile():
+@app.route("/updateprofile", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def updateprofile():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
@@ -1250,6 +1250,8 @@ def newgame():
 
 
 
+
+
 @app.route("/leave_game", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
 def leave_game():
 	if request.method == "OPTIONS":
@@ -1285,6 +1287,63 @@ def leave_game():
 
 
 
+
+
+
+
+
+
+
+
+@app.route("/update_profile", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def update_profile():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	first = lower(request_data.get('firstName'))
+	last = lower(request_data.get('lastName'))
+	email = lower(request_data.get('email'))
+	img = request_data.get('img')
+	u_id = request_data.get("userId")
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	response_data = {}
+
+	if '' in request_data.values():
+		response_data['errorMsg'] = 'Fields cannot be empty'
+		response = jsonify(response_data)
+		response.headers['Access-Control-Allow-Origin'] = '*'
+		return response
+
+	curs.execute("""SELECT email from users WHERE email = %s;""", (email,))
+	conn.commit()
+	if curs.rowcount > 0:
+		conn.close()
+		response_data['errorMsg'] = "Email address {} has already been used".format(email)
+		response = jsonify(response_data)
+		response.headers['Access-Control-Allow-Origin'] = '*'
+		return response
+
+	curs.execute("""UPDATE users SET first = %s, last = %s, email = %s, img = %s WHERE u_id = %s;""", (first, last, email, img, u_id))
+	conn.commit()
+
+	conn.close()
+
+	response_data = {}
+	response_data['userID'] = u_id
+	response_data['firstname'] = first.title()
+	response_data['lastName'] = last.title()
+	response_data['email'] = email
+	response_data['img'] = img
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
 
 
 
