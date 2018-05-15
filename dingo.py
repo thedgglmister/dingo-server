@@ -959,7 +959,7 @@ def validate_signup():
 	last = request_data['lastName']
 	pw = request_data['password']
 	confirm_pw = request_data['confirmPassword']
-	email = request_data['email']
+	email = lower(request_data['email'])
 
 	response_data = {}
 
@@ -1055,7 +1055,7 @@ def login():
 		return response
 
 	request_data = request.get_json()
-	email = request_data.get('email')
+	email = lower(request_data.get('email'))
 	pw = request_data.get("password")
 
 	conn = db_connect()
@@ -1313,7 +1313,7 @@ def get_my_prof(u_id, curs, conn):
 	conn.commit()
 	first, last, email, img = curs.fetchone()
 
-	my_prof = {u_id: {'firstName': first, 'lastName': last, 'email': email, 'img': img, 'userId': u_id}}
+	my_prof = {u_id: {'firstName': first.title(), 'lastName': last.title(), 'email': email, 'img': img, 'userId': u_id}}
 	return my_prof
 
 
@@ -1331,7 +1331,7 @@ def get_invs(u_id, curs, conn):
 		inv = {'invId': inv_id, 'fromId': from_id}
 		invs.append(inv)
 		if from_id not in profs:
-			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': from_id}
+			profs[from_id] = {'firstName': first.title(), 'lastName': last.title(), 'img': img, 'userId': from_id}
 
 	return invs, profs
 
@@ -1349,7 +1349,7 @@ def get_squares(g_id, curs, conn):
 	conn.commit()
 	rows = curs.fetchall()
 
-	squares = [{'breed': breed, 'img': img} for breed, img in rows]
+	squares = [{'breed': breed.title(), 'img': img} for breed, img in rows]
 
 	return squares
 
@@ -1364,7 +1364,7 @@ def get_nots(g_id, u_id, curs, conn):
 	for not_id, from_id, type, read, first, last, img in rows:
 		nots.append({'notId': not_id, 'fromId': from_id, 'type': type, 'read': read})
 		if from_id not in profs:
-			profs[from_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': from_id}
+			profs[from_id] = {'firstName': first.title(), 'lastName': last.title(), 'img': img, 'userId': from_id}
 
 	return nots, profs
 
@@ -1379,7 +1379,7 @@ def get_players(g_id, u_id, curs, conn):
 	for player_id, first, last, img in rows:
 		players.append(player_id)
 		if player_id not in profs:
-			profs[player_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': player_id}
+			profs[player_id] = {'firstName': first.title(), 'lastName': last.title(), 'img': img, 'userId': player_id}
 
 	players.insert(0, players.pop(players.index(u_id)))
 
