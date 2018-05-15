@@ -1370,7 +1370,7 @@ def accept_invite():
 		return response
 
 	request_data = request.get_json()
-	inv_id = request_data['inv_id']
+	inv_id = request_data['invId']
 
 	conn = db_connect()
 	curs = conn.cursor()
