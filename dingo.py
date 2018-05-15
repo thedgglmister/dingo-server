@@ -1335,6 +1335,8 @@ def update_profile():
 
 	conn.close()
 
+	print(first)
+	
 	response_data['firstname'] = first
 	response_data['lastName'] = last
 	response_data['email'] = email
