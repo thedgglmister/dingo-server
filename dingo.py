@@ -1136,6 +1136,8 @@ def all_data():
 		game_matches = get_matches(g_id, curs, conn)
 		game_players, game_player_profs = get_players(g_id, u_id, curs, conn)
 		game_nots, game_nots_profs = get_nots(g_id, u_id, curs, conn)
+		print(g_id)
+		print(game_nots)
 
 		games.append({'gameId': g_id, 'squares': game_squares})
 		matches[g_id] = game_matches
