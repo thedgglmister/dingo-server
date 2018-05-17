@@ -527,8 +527,8 @@ def new_game():
 
 
 
-@app.route("/invite", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def invite():
+@app.route("/in_vite", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def in_vite():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
@@ -1502,6 +1502,49 @@ def search_players():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route("/invite", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def invite():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	from_id = request_data['fromId']
+	to_id = request_data['toId']
+	g_id = request_data['gameId']
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""INSERT INTO invs (to_id, g_id, from_id) VALUES (%s, %s, %s);""", (to_id, g_id, from_id))
+	conn.commit()
+
+	response = Response()
+	response.headers['Access-Control-Allow-Origin'] = "*"
+	return response
 
 
 
