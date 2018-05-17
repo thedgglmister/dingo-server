@@ -642,8 +642,8 @@ def get_top_players():
 
 
 
-@app.route("/search_players", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def search_players():
+@app.route("/searchplayers", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def searchplayers():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
@@ -1444,6 +1444,60 @@ def decline_invite():
 	response = Response()
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#order alphabetically?
+@app.route("/search_players", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def search_players():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	patterns = request_data['searchPattern'].strip().split()
+	first_pattern = patterns[0]
+	last_pattern =  patterns[1] if len(patterns) > 1 else ''
+	
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""SELECT u_id, first, last, img FROM users WHERE (first LIKE %s AND last LIKE %s) OR (first LIKE %s AND last LIKE %s) LIMIT 20;""", (first_pattern + '%', last_pattern + '%', last_pattern + '%', first_pattern + '%'))
+	conn.commit()
+	rows = curs.fetchall()
+
+	otherProfiles = [{'u_id': u_id, 'firstName': first, 'lastname': last, 'img': img} for u_id, first, last, img in rows]
+
+	conn.close()
+
+	response = jsonify(otherProfiles)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
 
 
 
