@@ -1572,8 +1572,8 @@ def get_top_players(u_id, curs, conn):
 	profs = {}
 
 	for u_id, first, last, img in rows:
-	top_players.append(u_id)
-	profs[u_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': u_id}
+		top_players.append(u_id)
+		profs[u_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': u_id}
 
 	return top_players, profs
 
