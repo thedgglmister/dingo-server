@@ -1489,7 +1489,7 @@ def search_players():
 	conn.commit()
 	rows = curs.fetchall()
 
-	otherProfiles = [{'u_id': u_id, 'firstName': first, 'lastname': last, 'img': img} for u_id, first, last, img in rows]
+	otherProfiles = [{'u_id': u_id, 'firstName': first, 'lastName': last, 'img': img} for u_id, first, last, img in rows]
 
 	conn.close()
 
