@@ -1147,11 +1147,12 @@ def all_data():
 		all_profs.update(game_nots_profs)
 
 	invs, invs_profs = get_invs(u_id, curs, conn)
+	top_players, top_player_profs = get_top_players(u_id, curs, conn)
 	my_prof = get_my_prof(u_id, curs, conn)
 
 	all_profs.update(invs_profs)
+	all_profs.update(top_player_profs)
 	all_profs.update(my_prof)
-	#top_players_profs? or localstorage?
 
 	response_data = {}
 	response_data['games'] = games
@@ -1159,7 +1160,9 @@ def all_data():
 	response_data['nots'] = nots
 	response_data['players'] = players
 	response_data['matches'] = matches
+	response_data['topPlayers'] = top_players
 	response_data['allProfs'] = all_profs
+
 
 
 	conn.close()
@@ -1269,10 +1272,10 @@ def leave_game():
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""DELETE FROM gameplayers WHERE g_id = %s AND u_id = %s;""", (g_id, u_id))
+	curs.execute("""UPDATE gameplayers SET in_game = FALSE WHERE g_id = %s AND u_id = %s;""", (g_id, u_id))
 	conn.commit()
 
-	curs.execute("""INSERT INTO nots (g_id, from_id, to_id, type) SELECT %s, %s, u_id, 'leave' FROM gameplayers WHERE g_id = %s AND u_id != %s;""", (g_id, u_id, g_id, u_id))
+	curs.execute("""INSERT INTO nots (g_id, from_id, to_id, type) SELECT %s, %s, u_id, 'leave' FROM gameplayers WHERE g_id = %s AND in_game = TRUE AND u_id != %s;""", (g_id, u_id, g_id, u_id))
 	conn.commit()
 
 	conn.close()
@@ -1381,7 +1384,7 @@ def accept_invite():
 	conn.commit()
 	g_id, u_id = curs.fetchone()
 
-	curs.execute("""INSERT INTO nots (to_id, from_id, type) SELECT u_id, %s, 'join' FROM gameplayers WHERE g_id = %s;""", (u_id, g_id))
+	curs.execute("""INSERT INTO nots (to_id, from_id, type) SELECT u_id, %s, 'join' FROM gameplayers WHERE g_id = %s AND in_game = TRUE;""", (u_id, g_id))
 	conn.commit()
 
 	curs.execute("""INSERT INTO gameplayers (g_id, u_id) VALUES (%s, %s);""", (g_id, u_id))
@@ -1498,7 +1501,7 @@ def get_invs(u_id, curs, conn):
 
 
 def get_g_ids(u_id, curs, conn):
-	curs.execute("""SELECT g_id FROM gameplayers WHERE u_id = %s ORDER BY join_time""", (u_id,))
+	curs.execute("""SELECT g_id FROM gameplayers WHERE u_id = %s AND in_game = TRUE ORDER BY join_time""", (u_id,))
 	conn.commit()
 	g_ids = [row[0] for row in curs.fetchall()]
 	return g_ids
@@ -1531,7 +1534,7 @@ def get_nots(g_id, u_id, curs, conn):
 
 
 def get_players(g_id, u_id, curs, conn):
-	curs.execute("""SELECT users.u_id, first, last, img FROM gameplayers INNER JOIN users ON gameplayers.u_id = users.u_id WHERE g_id = %s ORDER BY gameplayers.join_time;""", (g_id,))
+	curs.execute("""SELECT users.u_id, first, last, img FROM gameplayers INNER JOIN users ON gameplayers.u_id = users.u_id WHERE g_id = %s AND in_game = TRUE ORDER BY gameplayers.join_time;""", (g_id,))
 	conn.commit()
 	rows = curs.fetchall()
 
@@ -1560,8 +1563,19 @@ def get_matches(g_id, curs, conn):
 
 
 
+def get_top_players(u_id, curs, conn):
+	curs.execute("""SELECT users.u_id, first, last, img FROM gameplayers as gp1 INNER JOIN gameplayers as gp2 ON gp1.g_id = gp2.g_id INNER JOIN users ON gp2.u_id = users.u_id WHERE gp1.u_id = %s AND gp2.u_id != %s GROUP BY users.u_id, users.first, users.last, users.img ORDER BY COUNT(users.u_id);""", (u_id, u_id))
+	conn.commit()
+	rows = curs.fetchall()
 
+	top_players = []
+	profs = {}
 
+	for u_id, first, last, img in rows:
+	top_players.append(u_id)
+	profs[u_id] = {'firstName': first, 'lastName': last, 'img': img, 'userId': u_id}
+
+	return top_players, profs
 
 
 
