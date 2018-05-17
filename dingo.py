@@ -1485,12 +1485,15 @@ def search_players():
 	conn = db_connect()
 	curs = conn.cursor()
 
+	print(patterns)
+	print(first_pattern)
+	print(last_pattern)
 	curs.execute("""SELECT u_id, first, last, img FROM users WHERE (first LIKE %s AND last LIKE %s) OR (first LIKE %s AND last LIKE %s) LIMIT 20;""", (first_pattern + '%', last_pattern + '%', last_pattern + '%', first_pattern + '%'))
 	conn.commit()
 	rows = curs.fetchall()
-
+	print(rows)
 	otherProfiles = [{'userId': u_id, 'firstName': first, 'lastName': last, 'img': img} for u_id, first, last, img in rows]
-
+	print(otherProfiles)
 	conn.close()
 
 	response = jsonify(otherProfiles)
