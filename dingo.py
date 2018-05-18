@@ -1400,7 +1400,7 @@ def accept_invite():
 	response_data['matches'] = {g_id: game_matches}
 	response_data['players'] = {g_id: game_players}
 	response_data['nots'] = {g_id: []}
-	response_data['top_players'] = top_players
+	response_data['topPlayers'] = top_players
 	response_data['profs'] = game_player_profs
 
 	conn.close()
