@@ -1393,7 +1393,7 @@ def accept_invite():
 	game_squares = get_squares(g_id, curs, conn)
 	game_matches = get_matches(g_id, curs, conn)
 	game_players, game_player_profs = get_players(g_id, u_id, curs, conn)
-	top_players, top_player_profs = get_top_players(g_id, curs, conn)
+	top_players, top_player_profs = get_top_players(u_id, curs, conn)
 
 	response_data = {}
 	response_data['games'] = [{'gameId': g_id, 'squares': game_squares}]
