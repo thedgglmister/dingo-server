@@ -699,8 +699,8 @@ def leavegame():
 
 
 
-@app.route("/read_nots", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def read_nots():
+@app.route("/readnots", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def readnots():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
@@ -1384,7 +1384,7 @@ def accept_invite():
 	conn.commit()
 	g_id, u_id = curs.fetchone()
 
-	curs.execute("""INSERT INTO nots (to_id, from_id, type) SELECT u_id, %s, 'join' FROM gameplayers WHERE g_id = %s AND in_game = TRUE;""", (u_id, g_id))
+	curs.execute("""INSERT INTO nots (to_id, from_id, type, g_id) SELECT u_id, %s, 'join', %s FROM gameplayers WHERE g_id = %s AND in_game = TRUE;""", (u_id, g_id, g_id))
 	conn.commit()
 
 	curs.execute("""INSERT INTO gameplayers (g_id, u_id) VALUES (%s, %s);""", (g_id, u_id))
@@ -1547,6 +1547,47 @@ def invite():
 	return response
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route("/read_nots", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def read_nots():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request.get_json()
+	g_id = request_data['gameId']
+	u_id = request_data['userId']
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	curs.execute("""UPDATE nots SET read = TRUE WHERE g_id = %s AND to_id = %s;""", (g_id, u_id))
+	conn.commit()
+
+	conn.close()
+
+	response = Response()
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
 
 
 
