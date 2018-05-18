@@ -372,8 +372,8 @@ def handle_request(requester, confirm):
 
 
 
-@app.route("/validate_breed", methods=["POST", "OPTIONS"]) ###use ajax... ?huh? //need to update backend database and push to everyone else... 
-def validate_breed(): ## give infer image without saving?
+@app.route("/validatebreed", methods=["POST", "OPTIONS"]) ###use ajax... ?huh? //need to update backend database and push to everyone else... 
+def validatebreed(): ## give infer image without saving?
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
@@ -1133,8 +1133,8 @@ def all_data():
 	g_ids = get_g_ids(u_id, curs, conn)
 	for g_id in g_ids:
 		game_squares = get_squares(g_id, curs, conn)
-		game_matches = get_matches(g_id, curs, conn)
 		game_players, game_player_profs = get_players(g_id, u_id, curs, conn)
+		game_matches = get_matches(g_id, game_players, curs, conn)
 		game_nots, game_nots_profs = get_nots(g_id, u_id, curs, conn)
 		print(g_id)
 		print(game_nots)
@@ -1391,8 +1391,8 @@ def accept_invite():
 	conn.commit()
 
 	game_squares = get_squares(g_id, curs, conn)
-	game_matches = get_matches(g_id, curs, conn)
 	game_players, game_player_profs = get_players(g_id, u_id, curs, conn)
+	game_matches = get_matches(g_id, game_players, curs, conn)
 	top_players, top_player_profs = get_top_players(u_id, curs, conn)
 
 	response_data = {}
@@ -1487,15 +1487,12 @@ def search_players():
 	conn = db_connect()
 	curs = conn.cursor()
 
-	print(patterns)
-	print(first_pattern)
-	print(last_pattern)
 	curs.execute("""SELECT u_id, first, last, img FROM users WHERE (first LIKE %s AND last LIKE %s) OR (first LIKE %s AND last LIKE %s) LIMIT 20;""", (first_pattern + '%', last_pattern + '%', last_pattern + '%', first_pattern + '%'))
 	conn.commit()
 	rows = curs.fetchall()
-	print(rows)
+
 	otherProfiles = [{'userId': u_id, 'firstName': first, 'lastName': last, 'img': img} for u_id, first, last, img in rows]
-	print(otherProfiles)
+
 	conn.close()
 
 	response = jsonify(otherProfiles)
@@ -1612,6 +1609,84 @@ def read_nots():
 
 
 
+@app.route("/validate_breed", methods=["POST", "OPTIONS"]) #need to update backend database and push to everyone else... 
+def validate_breed():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	request_data = request..get_json()
+	img = request_data['img']
+	breed = request_data['breed']
+	index = request_data['index']
+	g_id = request_data['gameId']
+	u_id = request_data['userId']
+
+	conn = db_connect()
+	curs = conn.cursor()
+
+	submit_breed = request_data['breedName'].lower().replace(' ', '_')
+	index = request_data['index']
+	gpid = request_data['gpid']
+	game_id = request_data['game_id']
+
+
+	probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
+	top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
+	for i in range(3):####
+		print(top3[i][0], top3[i][1]) ###
+	response_data = {'match': False}
+	for i in range(3):
+		if top3[i][0] == submit_breed and top3[i][1] > PASSING_PROB:
+			response_data['match'] = True
+
+	response_data['match'] = True	 #####tempppppp for testing!!!
+
+
+	if response_data['match'] == True:
+		conn = db_connect()
+		curs = conn.cursor()
+
+		curs.execute("INSERT INTO matches (gameplayer_id, index) VALUES (%s, %s);""", (gpid, index))
+		conn.commit()
+
+		curs.execute("""INSERT INTO nots (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND gameplayer_id != %s;""", (gpid, request_data['breedName'], game_id, gpid))
+		conn.commit()
+
+		conn.close()
+
+	response = jsonify(response_data)
+	response.headers['Access-Control-Allow-Origin'] = '*'
+	return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1693,12 +1768,12 @@ def get_players(g_id, u_id, curs, conn):
 	return players, profs
 
 
-def get_matches(g_id, curs, conn):
+def get_matches(g_id, player_ids, curs, conn):
 	curs.execute("""SELECT u_id, index FROM matches WHERE g_id = %s;""", (g_id,))
 	conn.commit()
 	rows = curs.fetchall()
 
-	matches = defaultdict(list)
+	matches = {player_id: [] for player_id in player_ids}
 	for u_id, index in rows:
 		matches[u_id].append(index)
 
