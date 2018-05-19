@@ -1136,8 +1136,6 @@ def all_data():
 		game_players, game_player_profs = get_players(g_id, u_id, curs, conn)
 		game_matches = get_matches(g_id, game_players, curs, conn)
 		game_nots, game_nots_profs = get_nots(g_id, u_id, curs, conn)
-		print(g_id)
-		print(game_nots)
 
 		games.append({'gameId': g_id, 'squares': game_squares})
 		matches[g_id] = game_matches
@@ -1607,7 +1605,7 @@ def read_nots():
 
 
 
-'''
+
 @app.route("/validate_breed", methods=["POST", "OPTIONS"]) #need to update backend database and push to everyone else... 
 def validate_breed():
 	if request.method == "OPTIONS":
@@ -1619,50 +1617,42 @@ def validate_breed():
 	request_data = request.get_json()
 	img = request_data['img']
 	breed = request_data['breed']
+	formatted_breed = breed.lower().replace(' ', '_')
 	index = request_data['index']
 	g_id = request_data['gameId']
 	u_id = request_data['userId']
 
-	conn = db_connect()
-	curs = conn.cursor()
-
-	submit_breed = request_data['breedName'].lower().replace(' ', '_')
-	index = request_data['index']
-	gpid = request_data['gpid']
-	game_id = request_data['game_id']
-
-
-	probs = infer(consts.CURRENT_MODEL_NAME, raw_file)
+	probs = infer(consts.CURRENT_MODEL_NAME, img)
 	top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
 	for i in range(3):####
 		print(top3[i][0], top3[i][1]) ###
-	response_data = {'match': False}
+
+	response_data = {}
 	for i in range(3):
-		if top3[i][0] == submit_breed and top3[i][1] > PASSING_PROB:
-			response_data['match'] = True
+		if top3[i][0] == formatted_breed and top3[i][1] > PASSING_PROB:
+			response_data['success'] = True
 
-	response_data['match'] = True	 #####tempppppp for testing!!!
+	response_data['success'] = True	 #####tempppppp for testing!!!
 
-
-	if response_data['match'] == True:
+	if response_data.get('success'):
 		conn = db_connect()
 		curs = conn.cursor()
 
-		curs.execute("INSERT INTO matches (gameplayer_id, index) VALUES (%s, %s);""", (gpid, index))
+		curs.execute("INSERT INTO matches (g_id, u_id, index) VALUES (%s, %s, %s);""", (g_id, u_id, index))
 		conn.commit()
-
-		curs.execute("""INSERT INTO nots (gameplayer_id, notifier_id, type) SELECT gameplayer_id, %s, %s FROM gameplayers WHERE game_id = %s AND gameplayer_id != %s;""", (gpid, request_data['breedName'], game_id, gpid))
+		
+		curs.execute("""INSERT INTO nots (g_id, from_id, to_id, type) SELECT %s, %s, u_id, %s FROM gameplayers WHERE g_id = %s AND in_game = TRUE AND u_id != %s;""", (g_id, u_id, breed, g_id, u_id))
 		conn.commit()
 
 		conn.close()
+
+	else:
+		response_data['errorMsg'] = 'SAY WRONG BREED OR INCONCLUSIVE'
 
 	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
 
-
-
-'''
 
 
 
