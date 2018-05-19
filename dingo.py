@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 from os import urandom, path, environ
 import random ##
 import json
+import base64
 from breed_classifier.inference.classify import infer
 from breed_classifier.common import consts
 from urllib import parse
@@ -1636,10 +1637,10 @@ def validate_breed():
 	g_id = request_data['gameId']
 	u_id = request_data['userId']
 
-	print("****** " + img[-100:])
+	#get rid of 'data:image/png;base64,' and decode
+	raw_img_bytes = base64.b64decode(img[:22])
 
-
-	probs = infer(consts.CURRENT_MODEL_NAME, img)
+	probs = infer(consts.CURRENT_MODEL_NAME, raw_img_bytes)
 	top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
 	for i in range(3):####
 		print(top3[i][0], top3[i][1]) ###
