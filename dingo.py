@@ -1608,7 +1608,7 @@ def read_nots():
 
 
 
-
+'''
 @app.route("/validate_breed", methods=["POST", "OPTIONS"]) #need to update backend database and push to everyone else... 
 def validate_breed():
 	if request.method == "OPTIONS":
@@ -1617,7 +1617,7 @@ def validate_breed():
 		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
 		return response
 
-	request_data = request..get_json()
+	request_data = request.get_json()
 	img = request_data['img']
 	breed = request_data['breed']
 	index = request_data['index']
@@ -1663,7 +1663,7 @@ def validate_breed():
 
 
 
-
+'''
 
 
 
