@@ -856,8 +856,9 @@ def test_read():
 		return response
 
 	raw_file = request.files['file'].read()
-	print("$$$" + raw_file)
 	print(type(raw_file))
+	print("$$$" + str(raw_file))
+
 
 
 
