@@ -485,8 +485,8 @@ def homedata():
 
 
 
-@app.route("/new_game", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def new_game():
+@app.route("/newgame", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def newgame():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
@@ -1190,8 +1190,8 @@ def all_data():
 
 
 
-@app.route("/newgame", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
-def newgame():
+@app.route("/new_game", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def new_game():
 	if request.method == "OPTIONS":
 		response = Response()
 		response.headers['Access-Control-Allow-Origin'] = "*"
@@ -1222,11 +1222,10 @@ def newgame():
 		conn.commit()
 
 	response_data = {}
-	response_data['gameId'] = g_id
-	response_data['squares'] = get_squares(g_id, curs, conn)
-	response_data['players'] = [u_id]
-	response_data['nots'] = []
-	response_data['matches'] = {u_id: []}
+	response_data['games'] = [{'gameId': g_id, 'squares': get_squares(g_id, curs, conn)}]
+	response_data['players'] = {g_id: [u_id]}
+	response_data['nots'] = {g_id: []}
+	response_data['matches'] = {g_id: {u_id: []}}
 
 	conn.close()
 
