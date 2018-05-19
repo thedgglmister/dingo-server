@@ -846,6 +846,19 @@ def format_nots(row):
 
 
 
+#order alphabetically?
+@app.route("/test_read", methods=["POST", "OPTIONS"])  #what prevetns someone from posting an int to this from anywhere?
+def test_read():
+	if request.method == "OPTIONS":
+		response = Response()
+		response.headers['Access-Control-Allow-Origin'] = "*"
+		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+		return response
+
+	raw_file = request.files['file'].read()
+	print("$$$" + raw_file)
+	print(type(raw_file))
+
 
 
 
@@ -1621,6 +1634,9 @@ def validate_breed():
 	index = request_data['index']
 	g_id = request_data['gameId']
 	u_id = request_data['userId']
+
+	print("****** " + img[:300])
+
 
 	probs = infer(consts.CURRENT_MODEL_NAME, img)
 	top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
