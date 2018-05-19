@@ -1639,8 +1639,8 @@ def validate_breed():
 
 	#get rid of 'data:image/png;base64,' and decode
 	print("@@@@ " + img[:100])
-	print("@@@@ " + img[:22])	
-	raw_img_bytes = base64.b64decode(img[:22])
+	print("@@@@ " + img[22:])	
+	raw_img_bytes = base64.b64decode(img[22:])
 
 	probs = infer(consts.CURRENT_MODEL_NAME, raw_img_bytes)
 	top3 = probs.take([i for i in range(3)]).values.tolist()[:3]
