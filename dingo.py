@@ -1636,7 +1636,7 @@ def validate_breed():
 	g_id = request_data['gameId']
 	u_id = request_data['userId']
 
-	print("****** " + img[:300])
+	print("****** " + img[-100:])
 
 
 	probs = infer(consts.CURRENT_MODEL_NAME, img)
