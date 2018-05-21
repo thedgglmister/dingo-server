@@ -12,6 +12,7 @@ from breed_classifier.freezing import freeze
 from breed_classifier.common import paths
 
 
+
 def infer(model_name, img_raw):
     with tf.Graph().as_default(), tf.Session().as_default() as sess:
         tensors = freeze.unfreeze_into_current_graph(
