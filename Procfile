@@ -1,1 +1,1 @@
-web: python3 dingo.py
+web: gunicorn wsgi

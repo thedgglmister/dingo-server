@@ -8,15 +8,13 @@ name = "pypi"
 [packages]
 
 numpy = "*"
-flask = "*"
+Flask = "*"
 "psycopg2" = "*"
 pandas = "*"
 tensorflow = "*"
 sklearn = "*"
 scipy = "*"
 gunicorn = "*"
-flask-socketio = "*"
-flask-cors = "*"
 
 
 [dev-packages]
