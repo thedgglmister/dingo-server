@@ -552,12 +552,18 @@ def decline_invite():
 	conn = db_connect()
 	curs = conn.cursor()
 
-	curs.execute("""DELETE FROM invs WHERE inv_id = %s;""", (inv_id,))
+	curs.execute("""DELETE FROM invs WHERE inv_id = %s RETURNING u_id;""", (inv_id,))
 	conn.commit()
+	u_id = curs.fetchone()
+
+	invs = get_invs(u_id, curs, conn)[0]
 
 	conn.close()
 
-	response = Response()
+	response_data = {}
+	response_data['invs'] = invs
+
+	response = jsonify(response_data)
 	response.headers['Access-Control-Allow-Origin'] = '*'
 	return response
 
