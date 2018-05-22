@@ -491,13 +491,10 @@ def accept_invite():
 
 	conn = db_connect()
 	curs = conn.cursor()
-##high coding at next query
-	curs.execute("""DELETE FROM invs WHERE g_id = (SELECT g_id FROM invs WHERE inv_id = %s) RETURNING g_id, to_id, inv_id;""", (inv_id,))
+##high coding here
+	curs.execute("""DELETE FROM invs WHERE g_id = (SELECT g_id FROM invs WHERE inv_id = %s) RETURNING g_id, to_id;""", (inv_id,))
 	conn.commit()
-
-	rows = curs.fetchall()
-	g_id, u_id = rows[0][0], rows[0][1]
-	deleted_invs = [row[2] for row in rows]
+	g_id, u_id = curs.fetchone()
 
 	curs.execute("""INSERT INTO nots (to_id, from_id, type, g_id) SELECT u_id, %s, 'join', %s FROM gameplayers WHERE g_id = %s AND in_game = TRUE;""", (u_id, g_id, g_id))
 	conn.commit()
@@ -509,6 +506,7 @@ def accept_invite():
 	game_players, game_player_profs = get_players(g_id, u_id, curs, conn)
 	game_matches = get_matches(g_id, game_players, curs, conn)
 	top_players, top_player_profs = get_top_players(u_id, curs, conn)
+	invs = get_invs(u_id, curs, conn)[0]
 
 	response_data = {}
 	response_data['games'] = [{'gameId': g_id, 'squares': game_squares}]
@@ -517,7 +515,7 @@ def accept_invite():
 	response_data['nots'] = {g_id: []}
 	response_data['topPlayers'] = top_players
 	response_data['profs'] = game_player_profs
-	response_data['deletedInvs'] = deleted_invs
+	response_data['invs'] = invs
 
 	conn.close()
 
